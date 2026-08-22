@@ -19,6 +19,9 @@ function truncateAddress(address: string) {
   return `${address.slice(0, 6)}…${address.slice(-6)}`;
 }
 
+/** Mock only — no real credit product/backend behind this yet. */
+const MOCK_CREDIT_LIMIT = 1000;
+
 export function SidebarBalance({
   initialAmount,
   hasWallet,
@@ -36,9 +39,15 @@ export function SidebarBalance({
   const [isLoadingDetails, startLoadingDetails] = useTransition();
 
   const [copied, setCopied] = useState(false);
-  const [fundAmount, setFundAmount] = useState("25");
-  const [fundError, setFundError] = useState<string | null>(null);
-  const [isFunding, startFunding] = useTransition();
+
+  const [creditAmount, setCreditAmount] = useState(0);
+  const [creditConfirmed, setCreditConfirmed] = useState(false);
+
+  function updateCreditAmount(next: number) {
+    const clamped = Math.min(MOCK_CREDIT_LIMIT, Math.max(0, next));
+    setCreditAmount(clamped);
+    setCreditConfirmed(false);
+  }
 
   function refresh() {
     startTransition(async () => {
@@ -80,27 +89,6 @@ export function SidebarBalance({
     navigator.clipboard.writeText(details.address).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
-    });
-  }
-
-  function fundWallet() {
-    setFundError(null);
-    startFunding(async () => {
-      try {
-        const res = await fetch("/api/stores/fund", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ amount: Number(fundAmount) }),
-        });
-        if (!res.ok) {
-          const body = await res.json().catch(() => null);
-          throw new Error(body?.error ?? "fund_failed");
-        }
-        const balances = await res.json();
-        setDetails((prev) => (prev ? { ...prev, usdc: balances.usdc, usdxm: balances.usdxm } : prev));
-      } catch {
-        setFundError("No pudimos fondear la billetera.");
-      }
     });
   }
 
@@ -159,34 +147,42 @@ export function SidebarBalance({
                 </button>
               </div>
 
-              {details.isStaging ? (
-                <div className="flex flex-col gap-1.5">
-                  <span className="text-xs text-forest/50">
-                    Fondear con Crossmint (USDXM staging · {formatAmount(details.usdxm.amount)})
-                  </span>
-                  <div className="flex gap-1.5">
-                    <input
-                      type="number"
-                      min={1}
-                      max={100}
-                      value={fundAmount}
-                      onChange={(e) => setFundAmount(e.target.value)}
-                      className="w-16 rounded-lg bg-white px-2 py-1.5 text-xs text-forest ring-1 ring-forest/10 focus:outline-none focus:ring-amber"
-                    />
-                    <button
-                      onClick={fundWallet}
-                      disabled={isFunding}
-                      className="flex-1 rounded-lg bg-amber px-2 py-1.5 text-xs font-medium text-forest hover:bg-amber-dark disabled:opacity-50"
-                    >
-                      {isFunding ? "Fondeando…" : "Fondear"}
-                    </button>
-                  </div>
-                  <p className="text-[11px] leading-snug text-forest/40">
-                    Token de prueba de Crossmint, no es USDC real.
-                  </p>
-                  {fundError ? <p className="text-xs text-red-600">{fundError}</p> : null}
+              <div className="flex flex-col gap-1.5 border-t border-forest/8 pt-3">
+                <span className="text-xs text-forest/50">
+                  Línea de crédito disponible · {formatAmount(String(MOCK_CREDIT_LIMIT))}
+                </span>
+                <input
+                  type="range"
+                  min={0}
+                  max={MOCK_CREDIT_LIMIT}
+                  step={10}
+                  value={creditAmount}
+                  onChange={(e) => updateCreditAmount(Number(e.target.value))}
+                  className="w-full accent-amber"
+                />
+                <div className="flex gap-1.5">
+                  <input
+                    type="number"
+                    min={0}
+                    max={MOCK_CREDIT_LIMIT}
+                    value={creditAmount}
+                    onChange={(e) => updateCreditAmount(Number(e.target.value))}
+                    className="w-20 rounded-lg bg-white px-2 py-1.5 text-xs text-forest ring-1 ring-forest/10 focus:outline-none focus:ring-amber"
+                  />
+                  <button
+                    onClick={() => setCreditConfirmed(true)}
+                    disabled={creditAmount === 0}
+                    className="flex-1 rounded-lg bg-amber px-2 py-1.5 text-xs font-medium text-forest hover:bg-amber-dark disabled:opacity-50"
+                  >
+                    Confirmar
+                  </button>
                 </div>
-              ) : null}
+                {creditConfirmed ? (
+                  <p className="text-[11px] text-forest-light">
+                    Solicitud de {formatAmount(String(creditAmount))} enviada (demo).
+                  </p>
+                ) : null}
+              </div>
             </>
           ) : null}
         </div>

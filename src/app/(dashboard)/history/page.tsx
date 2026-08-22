@@ -53,8 +53,9 @@ export default async function HistoryPage() {
               </div>
               <div className="text-right">
                 <p className="tabular-nums font-semibold text-forest">
-                  ${Number(payment.amountUsdc).toFixed(2)}
+                  {payment.amountMxn ? `$${Number(payment.amountMxn).toFixed(2)} MXN` : "—"}
                 </p>
+                <p className="tabular-nums text-xs text-ink-4">${Number(payment.amountUsdc).toFixed(2)} USDC</p>
                 <p className={`text-xs ${STATUS_COLOR[payment.status] ?? "text-ink-4"}`}>
                   {STATUS_LABEL[payment.status] ?? payment.status}
                 </p>

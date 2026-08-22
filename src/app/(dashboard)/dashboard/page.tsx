@@ -58,7 +58,7 @@ export default async function DashboardPage() {
                 </div>
                 <div className="text-right">
                   <p className="tabular-nums font-semibold text-forest">
-                    ${Number(payment.amountUsdc).toFixed(2)}
+                    {payment.amountMxn ? `$${Number(payment.amountMxn).toFixed(2)} MXN` : "—"}
                   </p>
                   <StatusBadge status={payment.status} />
                 </div>

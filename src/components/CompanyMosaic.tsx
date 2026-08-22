@@ -33,7 +33,10 @@ export function CompanyMosaic({
   return (
     <div className="flex flex-col gap-8">
       {ungrouped.length > 0 ? (
-        <CompanyGrid companies={ungrouped} category={category} activeCompanyId={activeCompanyId} />
+        <div className="flex flex-col gap-4">
+          <h2 className="text-sm font-semibold text-forest/60">Los más usados</h2>
+          <CompanyGrid companies={ungrouped} category={category} activeCompanyId={activeCompanyId} />
+        </div>
       ) : null}
 
       {Array.from(groups.entries()).map(([groupName, groupCompanies]) => (
@@ -63,8 +66,8 @@ function CompanyGrid({
           <Link
             key={company.id}
             href={`/pay?category=${category}&company=${company.id}`}
-            className={`flex aspect-[2/1] items-center justify-center overflow-hidden rounded-2xl border-2 bg-white p-5 transition-colors hover:shadow-md ${
-              active ? "border-amber" : "border-forest hover:border-amber/50"
+            className={`flex aspect-[2/1] items-center justify-center overflow-hidden rounded-2xl bg-white p-5 transition-all hover:shadow-md ${
+              active ? "border-4 border-amber" : "border-2 border-forest hover:border-4 hover:border-amber-dark"
             }`}
           >
             <Image

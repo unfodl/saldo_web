@@ -16,6 +16,20 @@ export function validateReference(reference: string): ValidationResult {
   return { ok: true };
 }
 
+export function validateMxnAmount(amount: string): ValidationResult {
+  const value = Number(amount);
+  if (!amount || Number.isNaN(value)) {
+    return { ok: false, error: "Ingresa un monto válido." };
+  }
+  if (value <= 0) {
+    return { ok: false, error: "El monto debe ser mayor a 0." };
+  }
+  if (Math.round(value * 100) / 100 !== value) {
+    return { ok: false, error: "El monto admite hasta 2 decimales." };
+  }
+  return { ok: true };
+}
+
 export function validateAmount(amount: string, availableBalance: number): ValidationResult {
   const value = Number(amount);
   if (!amount || Number.isNaN(value)) {

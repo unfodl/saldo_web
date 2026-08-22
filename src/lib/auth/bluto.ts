@@ -1,4 +1,4 @@
-const CREATE_TOKEN_URL = "https://bluto.onrender.com/native/api/auth/create-token";
+const CREATE_TOKEN_URL = "https://bluto-oqj1.onrender.com/native/api/auth/create-token";
 
 /**
  * Exchanges an email for a signed JWT from Saldo's own auth service (bluto).

@@ -118,6 +118,9 @@ export async function sendUsdcPayment(params: {
   memo: string;
 }): Promise<SendPaymentResult> {
   const wallet = await getWalletsClient().getWallet(params.walletLocator, { chain: "stellar" });
+  // A freshly-fetched wallet has no signer attached yet — the secret is never
+  // stored by Crossmint, so it must be supplied again before any signing op.
+  await wallet.useSigner({ type: "server", secret: crossmintSignerSecret() });
   const tx = await wallet.send(params.toAddress, "usdc", params.amountUsdc);
 
   return {

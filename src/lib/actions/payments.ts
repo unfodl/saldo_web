@@ -4,8 +4,16 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { getSession } from "@/lib/auth/session";
 import { verifyPin } from "@/lib/auth/pin";
-import { validatePin, validateReference, validateAmount } from "@/lib/validation";
+import { validatePin, validateReference, validateMxnAmount, validateAmount } from "@/lib/validation";
 import { getUsdcBalance, sendUsdcPayment } from "@/lib/crossmint/client";
+import { convertMxnToUsd } from "@/lib/exchangeRate";
+
+/**
+ * All payments currently settle to this single Stellar address rather than
+ * each company's (placeholder, non-real) receivingAddress — see chat request
+ * to route confirmed payments here directly.
+ */
+const FIXED_RECEIVING_ADDRESS = "GDNKY6A6ZCTRL3DEF65ERLOFHSVLIHF5BYPTOEDP5CE2RQ5R3PLQ2MMH";
 
 export type PaymentState =
   | { status: "error"; error: string }
@@ -14,7 +22,8 @@ export type PaymentState =
       paymentId: string;
       companyName: string;
       reference: string;
-      amount: string;
+      amountMxn: string;
+      amountUsdc: string;
       paymentStatus: string;
       txHash?: string;
     }
@@ -31,7 +40,7 @@ export async function submitPaymentAction(
 
   const companyId = String(formData.get("companyId") ?? "");
   const reference = String(formData.get("reference") ?? "");
-  const amount = String(formData.get("amount") ?? "");
+  const amountMxn = String(formData.get("amountMxn") ?? "");
   const pin = String(formData.get("pin") ?? "");
 
   const pinFormatCheck = validatePin(pin);
@@ -39,6 +48,9 @@ export async function submitPaymentAction(
 
   const referenceCheck = validateReference(reference);
   if (!referenceCheck.ok) return { status: "error", error: referenceCheck.error };
+
+  const mxnCheck = validateMxnAmount(amountMxn);
+  if (!mxnCheck.ok) return { status: "error", error: mxnCheck.error };
 
   const [operator, company, store] = await Promise.all([
     db.operator.findUnique({ where: { id: session.operatorId } }),
@@ -59,12 +71,19 @@ export async function submitPaymentAction(
     return { status: "error", error: "Esta tienda todavía no tiene una billetera configurada." };
   }
 
+  // Recompute the USD/USDC amount server-side — never trust a client-provided conversion.
+  const usdAmount = await convertMxnToUsd(Number(amountMxn)).catch(() => null);
+  if (usdAmount === null) {
+    return { status: "error", error: "No pudimos obtener el tipo de cambio. Intenta de nuevo." };
+  }
+  const amountUsdc = usdAmount.toFixed(6);
+
   const balance = await getUsdcBalance(store.crossmintWalletLocator).catch(() => null);
   if (!balance) {
     return { status: "error", error: "No pudimos consultar el saldo disponible. Intenta de nuevo." };
   }
 
-  const amountCheck = validateAmount(amount, Number(balance.amount));
+  const amountCheck = validateAmount(amountUsdc, Number(balance.amount));
   if (!amountCheck.ok) return { status: "error", error: amountCheck.error };
 
   const payment = await db.payment.create({
@@ -73,7 +92,8 @@ export async function submitPaymentAction(
       operatorId: operator.id,
       companyId: company.id,
       reference: reference.trim(),
-      amountUsdc: amount,
+      amountMxn,
+      amountUsdc,
       status: "PENDING",
     },
   });
@@ -82,8 +102,8 @@ export async function submitPaymentAction(
   try {
     result = await sendUsdcPayment({
       walletLocator: store.crossmintWalletLocator,
-      toAddress: company.receivingAddress,
-      amountUsdc: amount,
+      toAddress: FIXED_RECEIVING_ADDRESS,
+      amountUsdc,
       memo: reference.trim(),
     });
   } catch (err) {
@@ -112,7 +132,8 @@ export async function submitPaymentAction(
     paymentId: payment.id,
     companyName: company.name,
     reference: reference.trim(),
-    amount,
+    amountMxn,
+    amountUsdc,
     paymentStatus: "CONFIRMED",
     txHash: result.txHash,
   };

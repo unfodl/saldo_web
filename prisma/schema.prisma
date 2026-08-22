@@ -67,6 +67,9 @@ model Payment {
   operatorId             String
   companyId              String
   reference               String
+  /// Original bill amount as entered by the operator, in MXN.
+  amountMxn              Decimal?      @db.Decimal(18, 2)
+  /// USDC amount actually transferred (converted from amountMxn via Saldo's exchange rate).
   amountUsdc             Decimal       @db.Decimal(18, 6)
   status                 PaymentStatus @default(PENDING)
   crossmintTransactionId String?

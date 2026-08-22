@@ -58,13 +58,14 @@ describe("crossmint client", () => {
     expect(balance.decimals).toBe(6);
   });
 
-  it("sendUsdcPayment resolves with transaction details on success", async () => {
+  it("sendUsdcPayment attaches the server signer before sending", async () => {
+    const useSigner = vi.fn().mockResolvedValue(undefined);
     const send = vi.fn().mockResolvedValue({
       transactionId: "tx_1",
       explorerLink: "https://stellar.expert/tx/1",
       hash: "abc123",
     });
-    mockGetWallet.mockResolvedValue({ send });
+    mockGetWallet.mockResolvedValue({ useSigner, send });
 
     const result = await sendUsdcPayment({
       walletLocator: "GADDRESS123",
@@ -73,14 +74,18 @@ describe("crossmint client", () => {
       memo: "ref",
     });
 
+    // A freshly-fetched wallet has no signer attached — regression test for
+    // the real "No signer is set" error hit against live staging.
+    expect(useSigner).toHaveBeenCalledWith({ type: "server", secret: "test-secret" });
     expect(send).toHaveBeenCalledWith("GDEMO0000000000000000000000000000000000000000000000", "usdc", "10");
     expect(result.transactionId).toBe("tx_1");
     expect(result.txHash).toBe("abc123");
   });
 
   it("sendUsdcPayment propagates errors from a failed transfer", async () => {
+    const useSigner = vi.fn().mockResolvedValue(undefined);
     const send = vi.fn().mockRejectedValue(new Error("Insufficient balance"));
-    mockGetWallet.mockResolvedValue({ send });
+    mockGetWallet.mockResolvedValue({ useSigner, send });
 
     await expect(
       sendUsdcPayment({

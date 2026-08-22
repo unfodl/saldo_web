@@ -20,7 +20,11 @@ const COMPANIES = [
   { name: "Dish", logoKey: "dish", category: "SERVICIOS" as const, group: "Compañías de Cable" },
   { name: "Izzi", logoKey: "izzi", category: "SERVICIOS" as const, group: "Compañías de Cable" },
   { name: "Megacable", logoKey: "megacable", category: "SERVICIOS" as const, group: "Compañías de Cable" },
+  { name: "Ecogas", logoKey: "ecogas", category: "SERVICIOS" as const, group: "Compañías de Gas" },
+  { name: "Maxigas", logoKey: "maxigas", category: "SERVICIOS" as const, group: "Compañías de Gas" },
+  { name: "Gas Natural", logoKey: "gasnatural", category: "SERVICIOS" as const, group: "Compañías de Gas" },
   { name: "AT&T", logoKey: "att", category: "RECARGAS" as const, group: null },
+  { name: "Telcel", logoKey: "telcel", category: "RECARGAS" as const, group: null },
 ];
 
 async function main() {
@@ -34,10 +38,10 @@ async function main() {
   });
 
   await db.operator.upsert({
-    where: { email: "operator@saldo.mx" },
+    where: { email: "info@saldo.mx" },
     update: {},
     create: {
-      email: "operator@saldo.mx",
+      email: "info@saldo.mx",
       pinHash: await hashPin("1234"),
       role: "OPERATOR",
       storeId: store.id,
@@ -59,7 +63,7 @@ async function main() {
     });
   }
 
-  console.log("Seeded demo store, operator (operator@saldo.mx / PIN 1234), and companies.");
+  console.log("Seeded demo store, operator (info@saldo.mx / PIN 1234), and companies.");
   console.log(
     "Store wallet not yet provisioned — run `npm run wallet:create -- demo-store` once CROSSMINT_API_KEY is set.",
   );

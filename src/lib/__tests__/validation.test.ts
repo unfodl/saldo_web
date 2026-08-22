@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { validateAmount, validatePin, validateReference } from "@/lib/validation";
+import { validateAmount, validateMxnAmount, validatePin, validateReference } from "@/lib/validation";
 
 describe("validateReference", () => {
   it("rejects empty references", () => {
@@ -35,6 +35,25 @@ describe("validateAmount", () => {
 
   it("accepts a valid amount within balance", () => {
     expect(validateAmount("42.50", 100).ok).toBe(true);
+  });
+});
+
+describe("validateMxnAmount", () => {
+  it("rejects non-numeric input", () => {
+    expect(validateMxnAmount("abc").ok).toBe(false);
+  });
+
+  it("rejects zero and negative amounts", () => {
+    expect(validateMxnAmount("0").ok).toBe(false);
+    expect(validateMxnAmount("-5").ok).toBe(false);
+  });
+
+  it("rejects more than 2 decimal places", () => {
+    expect(validateMxnAmount("500.505").ok).toBe(false);
+  });
+
+  it("accepts a valid peso amount with no balance check", () => {
+    expect(validateMxnAmount("500.50").ok).toBe(true);
   });
 });
 

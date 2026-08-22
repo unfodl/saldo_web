@@ -35,7 +35,7 @@ export default async function PayPage({
       : 0;
 
     return (
-      <div className="mx-auto flex max-w-md flex-col gap-6">
+      <div className="mx-auto flex max-w-4xl flex-col gap-6">
         <div className="flex flex-col gap-3">
           <Link
             href={`/pay?category=${category}`}
