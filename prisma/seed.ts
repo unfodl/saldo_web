@@ -37,6 +37,9 @@ async function main() {
     where: { email: "operator@saldo.mx" },
     update: {},
     create: {
+      firstName: "Operador",
+      lastName: "Demo",
+      phone: "5555555555",
       email: "operator@saldo.mx",
       pinHash: await hashPin("1234"),
       role: "OPERATOR",

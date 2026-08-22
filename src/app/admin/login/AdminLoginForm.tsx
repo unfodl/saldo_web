@@ -5,9 +5,10 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/TextField";
 
-export function LoginForm() {
+export function AdminLoginForm() {
   const router = useRouter();
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
 
@@ -17,20 +18,20 @@ export function LoginForm() {
     setIsPending(true);
 
     try {
-      const res = await fetch("/api/auth/login", {
+      const res = await fetch("/api/admin/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, password }),
       });
       const data = await res.json().catch(() => null);
 
       if (!res.ok) {
-        setError(data?.error ?? "No pudimos iniciar sesión. Intenta de nuevo.");
+        setError(data?.error ?? "Correo o contraseña incorrectos.");
         setIsPending(false);
         return;
       }
 
-      router.push("/dashboard");
+      router.push("/admin");
       router.refresh();
     } catch {
       setError("No pudimos iniciar sesión. Intenta de nuevo.");
@@ -44,11 +45,22 @@ export function LoginForm() {
         label="Correo"
         name="email"
         type="email"
-        placeholder="operador@tutienda.com"
+        placeholder="admin@saldo.mx"
         autoComplete="email"
         required
         value={email}
         onChange={(e) => setEmail(e.target.value)}
+        disabled={isPending}
+      />
+      <TextField
+        label="Contraseña"
+        name="password"
+        type="password"
+        placeholder="••••••••"
+        autoComplete="current-password"
+        required
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
         disabled={isPending}
       />
       {error ? <p className="text-sm text-red-600">{error}</p> : null}

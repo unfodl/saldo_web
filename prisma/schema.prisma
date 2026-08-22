@@ -36,6 +36,9 @@ model Store {
 
 model Operator {
   id        String       @id @default(cuid())
+  firstName String       @default("")
+  lastName  String       @default("")
+  phone     String       @default("")
   email     String       @unique
   pinHash   String
   role      OperatorRole @default(OPERATOR)

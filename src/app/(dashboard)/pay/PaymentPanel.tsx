@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -9,9 +9,21 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { PinInput } from "@/components/PinInput";
 import { validateReference, validateAmount } from "@/lib/validation";
-import { submitPaymentAction } from "@/lib/actions/payments";
 
 type Step = "details" | "confirm";
+
+type PaymentState =
+  | {
+      status: "success";
+      paymentId: string;
+      companyName: string;
+      reference: string;
+      amount: string;
+      paymentStatus: string;
+      txHash?: string;
+    }
+  | { status: "error"; error: string }
+  | undefined;
 
 const STATUS_LABEL: Record<string, string> = {
   PENDING: "Pendiente",
@@ -37,13 +49,34 @@ export function PaymentPanel({
   const [amount, setAmount] = useState("");
   const [detailsError, setDetailsError] = useState<string | null>(null);
   const [pin, setPin] = useState("");
-  const [state, formAction, isPending] = useActionState(submitPaymentAction, undefined);
+  const [state, setState] = useState<PaymentState>(undefined);
+  const [isPending, setIsPending] = useState(false);
 
-  useEffect(() => {
-    if (state?.status === "success") {
+  async function handlePaySubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setIsPending(true);
+
+    try {
+      const res = await fetch("/api/payments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ companyId, reference, amount, pin }),
+      });
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        setState({ status: "error", error: data?.error ?? "No pudimos procesar el pago." });
+        return;
+      }
+
+      setState({ status: "success", ...data });
       router.refresh();
+    } catch {
+      setState({ status: "error", error: "No pudimos procesar el pago. Intenta de nuevo." });
+    } finally {
+      setIsPending(false);
     }
-  }, [state, router]);
+  }
 
   function handleDetailsSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -138,13 +171,8 @@ export function PaymentPanel({
             <SummaryRow label="Monto" value={`$${Number(amount).toFixed(2)} USDC`} />
           </Card>
 
-          <form action={formAction} className="flex w-full flex-col items-center gap-6">
-            <input type="hidden" name="companyId" value={companyId} />
-            <input type="hidden" name="reference" value={reference} />
-            <input type="hidden" name="amount" value={amount} />
-            <input type="hidden" name="pin" value={pin} />
-
-            <PinInput value={pin} onChange={setPin} name="pin-display" disabled={isPending} />
+          <form onSubmit={handlePaySubmit} className="flex w-full flex-col items-center gap-6">
+            <PinInput value={pin} onChange={setPin} name="pin" disabled={isPending} />
 
             {state?.status === "error" ? <p className="text-sm text-red-600">{state.error}</p> : null}
 

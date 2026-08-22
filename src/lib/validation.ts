@@ -39,3 +39,24 @@ export function validatePin(pin: string): ValidationResult {
   }
   return { ok: true };
 }
+
+export function validateFirstName(firstName: string): ValidationResult {
+  if (firstName.trim().length === 0) {
+    return { ok: false, error: "Ingresa un nombre." };
+  }
+  return { ok: true };
+}
+
+export function validateLastName(lastName: string): ValidationResult {
+  if (lastName.trim().length === 0) {
+    return { ok: false, error: "Ingresa un apellido." };
+  }
+  return { ok: true };
+}
+
+export function validatePhone(phone: string): ValidationResult {
+  if (!/^\d{10}$/.test(phone.replace(/\D/g, ""))) {
+    return { ok: false, error: "Ingresa un teléfono de 10 dígitos." };
+  }
+  return { ok: true };
+}
