@@ -1,5 +1,3 @@
-"use client";
-
 import { useId } from "react";
 
 export function PinInput({
@@ -16,10 +14,11 @@ export function PinInput({
   const id = useId();
   return (
     <label htmlFor={id} className="flex flex-col items-center gap-2">
-      <span className="text-sm text-ink-3">Ingresa tu PIN de 4 dígitos</span>
+      <span className="text-sm text-ink-3">PIN de 4 dígitos</span>
       <input
         id={id}
         name={name}
+        type="password"
         value={value}
         disabled={disabled}
         onChange={(e) => {

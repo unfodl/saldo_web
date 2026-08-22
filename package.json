@@ -1,42 +1,28 @@
 {
-  "name": "saldo_web",
-  "version": "0.1.0",
+  "name": "admin-web",
   "private": true,
+  "version": "0.0.0",
+  "type": "module",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint",
-    "test": "vitest run",
-    "wallet:create": "tsx scripts/create-store-wallet.ts"
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "oxlint",
+    "preview": "vite preview"
   },
   "dependencies": {
-    "@crossmint/wallets-sdk": "^1.12.0",
-    "@prisma/adapter-pg": "^7.9.1",
-    "@prisma/client": "^7.9.1",
-    "bcryptjs": "^3.0.3",
-    "jose": "^6.2.8",
-    "lucide-react": "^1.31.0",
-    "next": "16.3.0",
-    "pg": "^8.23.0",
-    "prisma": "^7.9.1",
-    "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "react-router-dom": "^7.18.2"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
-    "@types/bcryptjs": "^2.4.6",
-    "@types/node": "^20",
-    "@types/pg": "^8.21.0",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "@vitejs/plugin-react": "^6.0.5",
-    "dotenv": "^17.4.2",
-    "eslint": "^9",
-    "eslint-config-next": "16.3.0",
-    "tailwindcss": "^4",
-    "tsx": "^4.23.12",
-    "typescript": "^5",
-    "vitest": "^4.1.10"
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/node": "^24.13.3",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.4",
+    "oxlint": "^1.75.0",
+    "tailwindcss": "^4.3.3",
+    "typescript": "~6.0.2",
+    "vite": "^8.2.0"
   }
 }

@@ -1,31 +1,71 @@
-# Saldo Web
+# Saldo Admin (admin-web)
 
-Store-operator payments web app (Next.js App Router). Operators log in with their
-store email, verified against Saldo's auth service (bluto), then send USDC
-payments to companies from the store's Crossmint wallet.
+A standalone React SPA (Vite + TypeScript + Tailwind) for admin user-management
+and store-operator login. Unlike `saldo_web` (the Next.js app one level up),
+this app has **no server of its own** — it calls bluto directly from the
+browser and holds its own auth tokens client-side.
 
 ## Getting started
 
 ```bash
 npm install
+cp .env.example .env.local   # then fill in VITE_BLUTO_API_URL if not using the default
 npm run dev
 ```
 
-Copy `.env.example` to `.env.local` and fill in the values — see comments there
-for what each variable is for. `BLUTO_API_URL` defaults to
-`http://localhost:8081/native/api`, so run a local `bluto` instance on port
-8081 for login to work in development.
+## Structure
+
+```
+src/
+  api/          fetch wrappers for bluto: config (base URL + endpoint paths),
+                httpClient (generic JSON request helper), authApi, usersApi
+  auth/         token-based auth context (one instance for admin, one for
+                regular users) + route guards
+  components/   shared UI (Button, TextField, Card, Modal, PinInput, Logo) —
+                ported from saldo_web's design system
+  pages/
+    admin/      AdminLoginPage, AdminDashboardPage, AddUserForm
+    user/       UserLoginPage, UserDashboardPage
+  routes/       React Router route tree
+  types/        shared request/response shapes
+```
+
+Layered by concern (api / auth / components / pages), not by feature — the
+app is small enough that this stays flat and easy to navigate.
+
+## Auth model
+
+On successful login (admin or user), the token bluto returns is kept in
+**sessionStorage** (cleared when the tab closes) and attached as
+`Authorization: Bearer <token>` on every subsequent admin/user API call. A
+real httpOnly cookie would be more resistant to XSS, but that requires the
+token to be set by a same-origin server — this app talks to bluto directly
+(a different origin), so the browser is the only place that can hold it.
+
+## ⚠️ Unverified backend assumptions
+
+Two things here are **guesses**, not confirmed against bluto's real behavior
+— fix them in one place if they don't match:
+
+1. **`src/api/config.ts` → `UNVERIFIED_ENDPOINTS.createUser`** — bluto has no
+   documented "create user" endpoint anywhere accessible to this app. This
+   guesses `POST /user/create` with `{ firstName, lastName, emailAddress, phoneNumber, pin }`.
+2. **`src/api/authApi.ts` → `loginAdmin`** — the existing `saldo_web` app
+   never reads bluto's admin-login response body; it only checks
+   `response.ok`, because bluto's JWT there comes back as a cookie on
+   bluto's own domain (unusable cross-origin by a plain SPA). This assumes
+   bluto *also* returns `{ token: "..." }` in the JSON body. If it only sets
+   that cookie, admin login will otherwise succeed but throw "no access
+   token" — confirm the real shape and adjust.
+
+Also: calling bluto directly from the browser (rather than proxying through
+a same-origin server, as `saldo_web` does) requires bluto to send CORS
+headers allowing this app's origin. If requests fail with a CORS error in
+the browser console, that's a bluto-side config change, not a bug here.
 
 ## Scripts
 
-- `npm run dev` — start the dev server
-- `npm run build` / `npm start` — production build/start
-- `npm run lint` — eslint
-- `npm test` — vitest
-- `npm run wallet:create -- <storeId>` — provision a Crossmint wallet for a store
-
-## Data
-
-Store/Operator/Company/Payment data lives in Postgres via Prisma
-(`prisma/schema.prisma`). Login/session verification calls the external bluto
-server (`src/lib/auth/bluto.ts`) instead of checking a password locally.
+- `npm run dev` — start the Vite dev server
+- `npm run build` — typecheck (`tsc -b`) + production build
+- `npm run lint` — oxlint
+- `npm run preview` — preview the production build locally
