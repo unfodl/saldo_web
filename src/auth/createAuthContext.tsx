@@ -1,10 +1,11 @@
 import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
-import { AUTH_STORAGE_KEYS, type AuthKind } from "./session";
+import { AUTH_EMAIL_STORAGE_KEYS, AUTH_STORAGE_KEYS, type AuthKind } from "./session";
 
 type AuthContextValue = {
   token: string | null;
+  email: string | null;
   isAuthenticated: boolean;
-  login: (token: string) => void;
+  login: (token: string, email: string) => void;
   logout: () => void;
 };
 
@@ -15,25 +16,32 @@ type AuthContextValue = {
 // that can hold the token, so this is the safest practical option available.
 export function createAuthContext(kind: AuthKind) {
   const storageKey = AUTH_STORAGE_KEYS[kind];
+  const emailStorageKey = AUTH_EMAIL_STORAGE_KEYS[kind];
   const Context = createContext<AuthContextValue | null>(null);
 
   function AuthProvider({ children }: { children: ReactNode }) {
     const [token, setToken] = useState<string | null>(() => sessionStorage.getItem(storageKey));
+    const [email, setEmail] = useState<string | null>(() => sessionStorage.getItem(emailStorageKey));
 
     const value = useMemo<AuthContextValue>(
       () => ({
         token,
+        email,
         isAuthenticated: token !== null,
-        login: (newToken: string) => {
+        login: (newToken: string, newEmail: string) => {
           sessionStorage.setItem(storageKey, newToken);
+          sessionStorage.setItem(emailStorageKey, newEmail);
           setToken(newToken);
+          setEmail(newEmail);
         },
         logout: () => {
           sessionStorage.removeItem(storageKey);
+          sessionStorage.removeItem(emailStorageKey);
           setToken(null);
+          setEmail(null);
         },
       }),
-      [token],
+      [token, email],
     );
 
     return <Context.Provider value={value}>{children}</Context.Provider>;

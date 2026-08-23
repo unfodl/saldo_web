@@ -25,6 +25,10 @@ export const UNVERIFIED_ENDPOINTS = {
   // Guessed to mirror adminLogin's /auth/admin/login path; confirm against
   // the real backend and fix here if the path or response shape differs.
   adminDetails: "/auth/admin/details",
+  // Guessed wallet endpoints — bluto doesn't document a wallet API anywhere
+  // we have access to. Confirm against the real backend and fix here.
+  walletDetails: "/wallet/details",
+  walletSend: "/wallet/send",
 };
 
 export const ENDPOINTS = { ...CONFIRMED_ENDPOINTS, ...UNVERIFIED_ENDPOINTS };

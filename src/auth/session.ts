@@ -5,6 +5,11 @@ export const AUTH_STORAGE_KEYS: Record<AuthKind, string> = {
   user: "saldo_user_token",
 };
 
+export const AUTH_EMAIL_STORAGE_KEYS: Record<AuthKind, string> = {
+  admin: "saldo_admin_email",
+  user: "saldo_user_email",
+};
+
 export const AUTH_LOGIN_PATHS: Record<AuthKind, string> = {
   admin: "/admin/login",
   user: "/login",

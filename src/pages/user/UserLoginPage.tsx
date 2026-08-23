@@ -22,8 +22,9 @@ export function UserLoginPage() {
     setIsPending(true);
 
     try {
-      const token = await loginUser(email.trim().toLowerCase(), pin);
-      login(token);
+      const trimmedEmail = email.trim().toLowerCase();
+      const token = await loginUser(trimmedEmail, pin);
+      login(token, trimmedEmail);
       navigate("/dashboard", { replace: true });
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "No pudimos iniciar sesión. Intenta de nuevo.");

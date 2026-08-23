@@ -21,8 +21,9 @@ export function AdminLoginPage() {
     setIsPending(true);
 
     try {
-      const token = await loginAdmin(email.trim().toLowerCase(), password);
-      login(token);
+      const trimmedEmail = email.trim().toLowerCase();
+      const token = await loginAdmin(trimmedEmail, password);
+      login(token, trimmedEmail);
       navigate("/admin", { replace: true });
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "No pudimos iniciar sesión. Intenta de nuevo.");
