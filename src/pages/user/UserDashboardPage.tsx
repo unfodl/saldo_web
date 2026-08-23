@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { fetchCurrentUser } from "../../api/userApi";
 import { fetchWalletDetails } from "../../api/walletApi";
 import { fetchUsdcBalance } from "../../api/crossmintApi";
@@ -128,9 +128,14 @@ export function UserDashboardPage() {
           <Logo size={36} />
           <p className="text-sm font-semibold">Mi cuenta</p>
         </div>
-        <button type="button" onClick={handleLogout} className="text-sm text-cream/70 hover:text-amber">
-          Cerrar sesión
-        </button>
+        <div className="flex items-center gap-5 text-sm">
+          <Link to="/store" className="text-cream/85 hover:text-amber">
+            Pagar a un proveedor
+          </Link>
+          <button type="button" onClick={handleLogout} className="text-cream/70 hover:text-amber">
+            Cerrar sesión
+          </button>
+        </div>
       </header>
 
       <main className="mx-auto max-w-3xl px-6 py-10">
