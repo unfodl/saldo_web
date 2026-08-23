@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { deleteUser, fetchUserDetails, fetchUserList } from "../../api/usersApi";
+import { fetchAdminDetails } from "../../api/adminApi";
 import { ApiError } from "../../api/httpClient";
 import { useAdminAuth } from "../../auth/adminAuth";
 import { ActionMenu } from "../../components/ActionMenu";
@@ -10,6 +11,7 @@ import { Modal } from "../../components/Modal";
 import { AddUserForm } from "./AddUserForm";
 import { EditUserForm } from "./EditUserForm";
 import type { AppUser } from "../../types/user";
+import type { AdminDetails } from "../../types/admin";
 
 export function AdminDashboardPage() {
   const navigate = useNavigate();
@@ -25,6 +27,7 @@ export function AdminDashboardPage() {
   const [detailsUser, setDetailsUser] = useState<AppUser | null>(null);
   const [isDetailsLoading, setIsDetailsLoading] = useState(false);
   const [detailsError, setDetailsError] = useState<string | null>(null);
+  const [adminDetails, setAdminDetails] = useState<AdminDetails | null>(null);
   const hasLoadedRef = useRef(false);
 
   const loadUsers = useCallback(async () => {
@@ -41,11 +44,26 @@ export function AdminDashboardPage() {
     }
   }, [token]);
 
+  // Re-fetched on every mount of this page — i.e. right after login (which
+  // navigates here) and again on any full page reload/refresh.
+  const loadAdminDetails = useCallback(async () => {
+    if (!token) return;
+    try {
+      const details = await fetchAdminDetails(token);
+      setAdminDetails(details);
+    } catch {
+      // Best-effort header display only — a failure here shouldn't block the
+      // rest of the dashboard from working.
+      setAdminDetails(null);
+    }
+  }, [token]);
+
   useEffect(() => {
     if (hasLoadedRef.current) return;
     hasLoadedRef.current = true;
     loadUsers();
-  }, [loadUsers]);
+    loadAdminDetails();
+  }, [loadUsers, loadAdminDetails]);
 
   function handleLogout() {
     logout();
@@ -89,9 +107,16 @@ export function AdminDashboardPage() {
           <Logo size={36} />
           <p className="text-sm font-semibold">Panel de administración</p>
         </div>
-        <button type="button" onClick={handleLogout} className="text-sm text-cream/70 hover:text-amber">
-          Cerrar sesión
-        </button>
+        <div className="flex items-center gap-4">
+          {adminDetails ? (
+            <span className="text-sm text-cream/80">
+              {[adminDetails.firstName, adminDetails.lastName].filter(Boolean).join(" ") || adminDetails.emailAddress}
+            </span>
+          ) : null}
+          <button type="button" onClick={handleLogout} className="text-sm text-cream/70 hover:text-amber">
+            Cerrar sesión
+          </button>
+        </div>
       </header>
 
       <main className="px-8 py-8">
@@ -140,9 +165,8 @@ export function AdminDashboardPage() {
                     <td className="px-4 py-3 text-ink-3">{user.phoneNumber || "—"}</td>
                     <td className="px-4 py-3">
                       <span
-                        className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${
-                          user.status === "ACTIVE" ? "bg-forest/10 text-forest" : "bg-ink-4/10 text-ink-4"
-                        }`}
+                        className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${user.status === "ACTIVE" ? "bg-forest/10 text-forest" : "bg-ink-4/10 text-ink-4"
+                          }`}
                       >
                         {user.status === "ACTIVE" ? "Activo" : "Inactivo"}
                       </span>
