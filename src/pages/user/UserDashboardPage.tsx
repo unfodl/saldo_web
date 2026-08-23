@@ -133,91 +133,102 @@ export function UserDashboardPage() {
         </button>
       </header>
 
-      <main className="mx-auto flex max-w-xl flex-col gap-6 px-6 py-8">
-        <Card className="bg-white p-6">
-          <h2 className="mb-4 text-lg font-semibold text-forest">Datos de la cuenta</h2>
-          {isProfileLoading ? (
-            <p className="text-sm text-ink-4">Cargando…</p>
-          ) : profileError ? (
-            <p className="text-sm text-red-600">{profileError}</p>
-          ) : profile ? (
-            <dl className="flex flex-col gap-3">
-              <div>
-                <dt className="text-xs font-medium uppercase text-ink-4">Nombre</dt>
-                <dd className="text-forest">{[profile.firstName, profile.lastName].filter(Boolean).join(" ") || "—"}</dd>
-              </div>
-              <div>
-                <dt className="text-xs font-medium uppercase text-ink-4">Correo</dt>
-                <dd className="text-forest">{profile.emailAddress}</dd>
-              </div>
-            </dl>
-          ) : null}
-        </Card>
-
-        <Card className="bg-white p-6">
-          <h2 className="mb-4 text-lg font-semibold text-forest">Billetera</h2>
-          {isWalletLoading ? (
-            <p className="text-sm text-ink-4">Cargando…</p>
-          ) : walletError ? (
-            <p className="text-sm text-red-600">{walletError}</p>
-          ) : wallet ? (
-            <div className="flex flex-col gap-4">
-              <div>
-                <p className="text-xs font-medium uppercase text-ink-4">Saldo</p>
-                {isBalanceLoading ? (
-                  <p className="text-sm text-ink-4">Cargando…</p>
-                ) : balanceError ? (
-                  <p className="text-sm text-red-600">{balanceError}</p>
-                ) : (
-                  <p className="text-2xl font-bold text-forest">
-                    {balance?.amount ?? "0"} <span className="text-sm font-medium text-ink-3">USDC</span>
-                  </p>
-                )}
-              </div>
-
-              <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-forest/5 px-4 py-3">
-                <div className="flex items-center gap-2">
-                  <span className="font-mono text-sm text-forest">{truncateAddress(wallet.address)}</span>
-                  <button
-                    type="button"
-                    onClick={() => handleCopyAddress(wallet.address)}
-                    aria-label="Copiar dirección"
-                    title="Copiar dirección"
-                    className="flex h-7 w-7 items-center justify-center rounded-md text-ink-3 transition-colors hover:bg-forest/10 hover:text-forest"
-                  >
-                    {isAddressCopied ? (
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-                        <path d="M20 6 9 17l-5-5" />
-                      </svg>
-                    ) : (
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-                        <rect x="9" y="9" width="13" height="13" rx="2" />
-                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                      </svg>
-                    )}
-                  </button>
+      <main className="mx-auto max-w-3xl px-6 py-10">
+        <Card className="bg-white p-8 shadow-sm">
+          <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 sm:divide-x sm:divide-forest/10">
+            {/* Left: account details */}
+            <div>
+              <h2 className="mb-5 text-xs font-semibold uppercase tracking-wider text-ink-4">Mi cuenta</h2>
+              {isProfileLoading ? (
+                <p className="text-sm text-ink-4">Cargando…</p>
+              ) : profileError ? (
+                <p className="text-sm text-red-600">{profileError}</p>
+              ) : profile ? (
+                <div className="flex flex-col gap-5">
+                  <div className="flex items-center gap-4">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-forest text-lg font-semibold text-cream">
+                      {(profile.firstName?.[0] ?? profile.emailAddress[0] ?? "?").toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="text-lg font-semibold text-forest">
+                        {[profile.firstName, profile.lastName].filter(Boolean).join(" ") || "—"}
+                      </p>
+                      <p className="text-sm text-ink-3">{profile.emailAddress}</p>
+                    </div>
+                  </div>
                 </div>
-                <span className="inline-flex items-center rounded-full bg-forest/10 px-3 py-1 text-xs font-medium text-forest">
-                  {wallet.chain}
-                </span>
-              </div>
+              ) : null}
             </div>
-          ) : null}
-        </Card>
 
-        <Card className="flex items-center justify-between bg-white p-6">
-          <div>
-            <h2 className="text-lg font-semibold text-forest">Enviar USDC</h2>
-            {sendSuccess ? <p className="mt-1 text-sm text-forest">{sendSuccess}</p> : null}
+            {/* Right: wallet details */}
+            <div className="sm:pl-10">
+              <h2 className="mb-5 text-xs font-semibold uppercase tracking-wider text-ink-4 sm:text-right">Billetera</h2>
+              {isWalletLoading ? (
+                <p className="text-sm text-ink-4 sm:text-right">Cargando…</p>
+              ) : walletError ? (
+                <p className="text-sm text-red-600 sm:text-right">{walletError}</p>
+              ) : wallet ? (
+                <div className="flex flex-col gap-4 sm:items-end">
+                  <div className="sm:text-right">
+                    {isBalanceLoading ? (
+                      <p className="text-sm text-ink-4">Cargando…</p>
+                    ) : balanceError ? (
+                      <p className="text-sm text-red-600">{balanceError}</p>
+                    ) : (
+                      <p className="text-3xl font-bold text-forest">
+                        {balance?.amount ?? "0"} <span className="text-sm font-medium text-ink-3">USDC</span>
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="flex w-full items-center justify-between gap-3 rounded-xl bg-forest/5 px-4 py-3 sm:w-auto">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-sm text-forest">{truncateAddress(wallet.address)}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleCopyAddress(wallet.address)}
+                        aria-label="Copiar dirección"
+                        title="Copiar dirección"
+                        className="flex h-7 w-7 items-center justify-center rounded-md text-ink-3 transition-colors hover:bg-forest/10 hover:text-forest"
+                      >
+                        {isAddressCopied ? (
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+                            <path d="M20 6 9 17l-5-5" />
+                          </svg>
+                        ) : (
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+                            <rect x="9" y="9" width="13" height="13" rx="2" />
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                          </svg>
+                        )}
+                      </button>
+                    </div>
+                    <span className="inline-flex items-center rounded-full bg-forest/10 px-3 py-1 text-xs font-medium text-forest">
+                      {wallet.chain.toUpperCase()}
+                    </span>
+                  </div>
+                </div>
+              ) : null}
+            </div>
           </div>
-          <Button
-            onClick={() => {
-              setSendSuccess(null);
-              setIsSendModalOpen(true);
-            }}
-          >
-            Enviar USDC
-          </Button>
+
+          <div className="my-8 border-t border-forest/10" />
+
+          {/* Bottom: send USDC */}
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h2 className="text-lg font-semibold text-forest">Enviar USDC</h2>
+              {sendSuccess ? <p className="mt-1 text-sm text-forest">{sendSuccess}</p> : null}
+            </div>
+            <Button
+              onClick={() => {
+                setSendSuccess(null);
+                setIsSendModalOpen(true);
+              }}
+            >
+              Enviar USDC
+            </Button>
+          </div>
         </Card>
       </main>
 
