@@ -1,10 +1,9 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { loginUser } from "../../api/authApi";
-import { sendUsdc } from "../../api/walletApi";
-import { ApiError } from "../../api/httpClient";
 import { useUserAuth } from "../../auth/userAuth";
 import { useSaldoWallet } from "../../hooks/useSaldoWallet";
+import { sendUsdcPayment } from "../../lib/crossmint/client";
 import { addPayment } from "../../lib/paymentHistory";
 import { validateAmount, validatePin, validateReference } from "../../lib/validation";
 import { Button } from "../../components/Button";
@@ -91,11 +90,18 @@ export function PaymentPanel({ company, category }: { company: Company; category
     let status: PaymentRecord["status"] = "CONFIRMED";
     let failureReason: string | undefined;
     try {
-      const result = await sendUsdc({ toAddress: company.receivingAddress, amount }, token);
+      // Sent straight through Crossmint's wallet.send(), not bluto — bluto's
+      // /wallet/send was an unverified guess at an endpoint it may not even
+      // implement; this talks to the wallet directly.
+      const result = await sendUsdcPayment({
+        walletAddress: wallet.address,
+        toAddress: company.receivingAddress,
+        amountUsdc: amount,
+      });
       txHash = result.txHash;
     } catch (err) {
       status = "FAILED";
-      failureReason = err instanceof ApiError ? err.message : "Error desconocido";
+      failureReason = err instanceof Error ? err.message : "Error desconocido";
     }
 
     addPayment(email, {
