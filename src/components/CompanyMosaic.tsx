@@ -24,14 +24,17 @@ export function CompanyMosaic({
   }
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-10">
       {ungrouped.length > 0 ? (
         <CompanyGrid companies={ungrouped} category={category} activeCompanyId={activeCompanyId} />
       ) : null}
 
       {Array.from(groups.entries()).map(([groupName, groupCompanies]) => (
         <div key={groupName} className="flex flex-col gap-4">
-          <h2 className="text-sm font-semibold text-forest/60">{groupName}</h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-forest/50">{groupName}</h2>
+            <div className="h-px flex-1 bg-forest/8" />
+          </div>
           <CompanyGrid companies={groupCompanies} category={category} activeCompanyId={activeCompanyId} />
         </div>
       ))}
@@ -56,15 +59,18 @@ function CompanyGrid({
           <Link
             key={company.id}
             to={`/store/pay?category=${category}&company=${company.id}`}
-            className={`flex aspect-[2/1] items-center justify-center overflow-hidden rounded-2xl border-2 bg-white p-5 transition-colors hover:shadow-md ${
-              active ? "border-amber" : "border-forest hover:border-amber/50"
+            className={`group flex flex-col items-center gap-3 rounded-2xl bg-white p-5 shadow-sm ring-1 transition-all duration-150 hover:-translate-y-0.5 hover:shadow-lg ${
+              active ? "shadow-lg ring-2 ring-amber" : "ring-forest/8 hover:ring-amber/40"
             }`}
           >
-            <img
-              src={`/logos/${company.logoKey}.png`}
-              alt={company.name}
-              className="h-full w-full object-contain"
-            />
+            <div className="flex aspect-[2/1] w-full items-center justify-center overflow-hidden rounded-xl bg-cream-muted/60 p-3">
+              <img
+                src={`/logos/${company.logoKey}.png`}
+                alt={company.name}
+                className="h-full w-full object-contain transition-transform duration-150 group-hover:scale-105"
+              />
+            </div>
+            <span className="text-sm font-medium text-forest/80">{company.name}</span>
           </Link>
         );
       })}

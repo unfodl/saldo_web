@@ -119,22 +119,29 @@ export function PaymentPanel({ company, category }: { company: Company; category
     setSuccess({ reference: trimmedReference, amount, status, txHash, failureReason });
   }
 
-  const logo = <img src={`/logos/${company.logoKey}.png`} alt={company.name} className="w-2/5 rounded-2xl object-cover" />;
-
   if (success) {
     const failed = success.status === "FAILED";
     return (
       <div className="mx-auto flex max-w-md flex-col items-center gap-6 text-center">
-        {logo}
-        <h1 className="text-xl font-bold text-forest">{failed ? "El pago no se pudo completar" : "¡Pago enviado!"}</h1>
-        <Card className="w-full divide-y divide-forest/8 bg-white px-5 text-left">
-          <SummaryRow label="Proveedor" value={company.name} />
-          <SummaryRow label="Referencia" value={success.reference} />
-          <SummaryRow label="Monto" value={`$${Number(success.amount).toFixed(2)} USDC`} />
-          <SummaryRow label="Estado" value={failed ? "Falló" : "Confirmado"} />
-          {success.txHash ? <SummaryRow label="Transacción" value={success.txHash} mono /> : null}
-          {success.failureReason ? <SummaryRow label="Motivo" value={success.failureReason} /> : null}
+        <StatusIcon failed={failed} />
+        <div>
+          <h1 className="text-2xl font-bold text-forest">{failed ? "El pago no se pudo completar" : "¡Pago enviado!"}</h1>
+          <p className="mt-1 text-sm text-ink-4">
+            {failed ? "Intenta de nuevo en unos minutos." : `Tu pago a ${company.name} fue procesado correctamente.`}
+          </p>
+        </div>
+
+        <Card className="w-full overflow-hidden bg-white text-left shadow-sm">
+          <CompanyHeader company={company} caption={failed ? "Pago fallido" : "Pago confirmado"} />
+          <div className="divide-y divide-forest/8 px-5">
+            <SummaryRow label="Referencia" value={success.reference} />
+            <SummaryRow label="Monto" value={`$${Number(success.amount).toFixed(2)} USDC`} />
+            <SummaryRow label="Estado" value={failed ? "Falló" : "Confirmado"} />
+            {success.txHash ? <SummaryRow label="Transacción" value={success.txHash} mono /> : null}
+            {success.failureReason ? <SummaryRow label="Motivo" value={success.failureReason} /> : null}
+          </div>
         </Card>
+
         <div className="flex w-full flex-col gap-3">
           <Link to={`/store/pay?category=${category}`}>
             <Button className="w-full">Hacer otro pago</Button>
@@ -151,8 +158,11 @@ export function PaymentPanel({ company, category }: { company: Company; category
 
   return (
     <div className="mx-auto flex w-full max-w-md flex-col items-center gap-6">
-      {logo}
-      <h1 className="text-xl font-bold text-forest">{company.name}</h1>
+      <Card className="w-full bg-white shadow-sm">
+        <CompanyHeader company={company} caption="Vas a pagar a" />
+      </Card>
+
+      <StepIndicator step={step} />
 
       {step === "details" ? (
         <form onSubmit={handleDetailsSubmit} className="flex w-full flex-col gap-4">
@@ -179,13 +189,16 @@ export function PaymentPanel({ company, category }: { company: Company; category
         </form>
       ) : (
         <div className="flex w-full flex-col items-center gap-6">
-          <Card className="w-full divide-y divide-forest/8 bg-white px-5">
+          <Card className="w-full divide-y divide-forest/8 bg-white px-5 shadow-sm">
             <SummaryRow label="Referencia" value={reference} />
             <SummaryRow label="Monto" value={`$${Number(amount).toFixed(2)} USDC`} />
           </Card>
 
           <form onSubmit={handleConfirm} className="flex w-full flex-col items-center gap-6">
-            <PinInput value={pin} onChange={setPin} name="pin" disabled={isPending} />
+            <div className="flex flex-col items-center gap-2">
+              <p className="text-sm text-ink-3">Ingresa tu PIN para confirmar</p>
+              <PinInput value={pin} onChange={setPin} name="pin" disabled={isPending} />
+            </div>
 
             {pinError ? <p className="text-sm text-red-600">{pinError}</p> : null}
 
@@ -199,6 +212,87 @@ export function PaymentPanel({ company, category }: { company: Company; category
             </div>
           </form>
         </div>
+      )}
+    </div>
+  );
+}
+
+function CompanyHeader({ company, caption }: { company: Company; caption: string }) {
+  return (
+    <div className="flex items-center gap-4 px-5 py-4">
+      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-cream-muted/60 p-2 ring-1 ring-forest/8">
+        <img src={`/logos/${company.logoKey}.png`} alt={company.name} className="h-full w-full object-contain" />
+      </div>
+      <div>
+        <p className="text-xs text-ink-4">{caption}</p>
+        <p className="text-lg font-bold text-forest">{company.name}</p>
+      </div>
+    </div>
+  );
+}
+
+function StepIndicator({ step }: { step: Step }) {
+  const steps: { key: Step; label: string }[] = [
+    { key: "details", label: "Detalles" },
+    { key: "confirm", label: "Confirmar" },
+  ];
+  const activeIndex = steps.findIndex((s) => s.key === step);
+
+  return (
+    <div className="flex w-full items-center">
+      {steps.map((s, i) => {
+        const isDone = i < activeIndex;
+        const isActive = i === activeIndex;
+        return (
+          <div key={s.key} className="flex flex-1 items-center last:flex-none">
+            <div className="flex items-center gap-2">
+              <div
+                className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold transition-colors ${
+                  isDone ? "bg-forest text-cream" : isActive ? "bg-amber text-forest" : "bg-forest/10 text-forest/40"
+                }`}
+              >
+                {isDone ? "✓" : i + 1}
+              </div>
+              <span className={`text-xs font-medium whitespace-nowrap ${isActive ? "text-forest" : "text-forest/40"}`}>
+                {s.label}
+              </span>
+            </div>
+            {i < steps.length - 1 ? <div className={`mx-3 h-px flex-1 ${isDone ? "bg-forest/40" : "bg-forest/10"}`} /> : null}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function StatusIcon({ failed }: { failed: boolean }) {
+  return (
+    <div className={`flex h-16 w-16 items-center justify-center rounded-full ${failed ? "bg-red-100" : "bg-forest/10"}`}>
+      {failed ? (
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="h-8 w-8 text-red-600"
+        >
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      ) : (
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="h-8 w-8 text-forest"
+        >
+          <path d="M20 6 9 17l-5-5" />
+        </svg>
       )}
     </div>
   );

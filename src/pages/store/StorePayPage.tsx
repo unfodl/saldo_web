@@ -38,7 +38,10 @@ export function StorePayPage() {
 
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-8">
-      <h1 className="text-xl font-bold text-forest">{CATEGORY_LABEL[category]}</h1>
+      <div>
+        <h1 className="text-2xl font-bold text-forest">{CATEGORY_LABEL[category]}</h1>
+        <p className="mt-1 text-sm text-ink-4">Elige un proveedor para continuar con tu pago.</p>
+      </div>
       <CompanyMosaic companies={companies} category={category} activeCompanyId={null} />
     </div>
   );
