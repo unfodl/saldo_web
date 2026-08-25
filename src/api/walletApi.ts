@@ -1,6 +1,6 @@
 import { ENDPOINTS } from "./config";
 import { apiRequest } from "./httpClient";
-import type { SendUsdcPayload, SendUsdcResult, WalletDetails } from "../types/wallet";
+import type { SendTokenPayload, SendUsdcResult, WalletDetails } from "../types/wallet";
 
 // TODO: UNVERIFIED — see ENDPOINTS.walletDetails in ./config for context.
 export async function fetchWalletDetails(email: string, token: string): Promise<WalletDetails> {
@@ -11,9 +11,10 @@ export async function fetchWalletDetails(email: string, token: string): Promise<
   return (response as { data?: WalletDetails })?.data ?? (response as WalletDetails);
 }
 
-// TODO: UNVERIFIED — see ENDPOINTS.walletSend in ./config for context.
-export async function sendUsdc(payload: SendUsdcPayload, token: string): Promise<SendUsdcResult> {
-  const response = await apiRequest<{ data?: SendUsdcResult } | SendUsdcResult | null>(ENDPOINTS.walletSend, {
+// Sends USDC server-side — the backend holds the Crossmint credentials and
+// does the actual wallet.send(), so the browser never needs a secret key.
+export async function sendToken(payload: SendTokenPayload, token: string): Promise<SendUsdcResult> {
+  const response = await apiRequest<{ data?: SendUsdcResult } | SendUsdcResult | null>(ENDPOINTS.sendToken, {
     method: "POST",
     body: payload,
     token,

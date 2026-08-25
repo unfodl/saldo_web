@@ -1,9 +1,10 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { loginUser } from "../../api/authApi";
+import { ApiError } from "../../api/httpClient";
+import { sendToken } from "../../api/walletApi";
 import { useUserAuth } from "../../auth/userAuth";
 import { useSaldoWallet } from "../../hooks/useSaldoWallet";
-import { sendUsdcPayment } from "../../lib/crossmint/client";
 import { addPayment } from "../../lib/paymentHistory";
 import { validateAmount, validatePin, validateReference } from "../../lib/validation";
 import { Button } from "../../components/Button";
@@ -19,6 +20,7 @@ type SuccessState = {
   amount: string;
   status: PaymentRecord["status"];
   txHash?: string;
+  failureReason?: string;
 };
 
 export function PaymentPanel({ company, category }: { company: Company; category: CompanyCategory }) {
@@ -90,18 +92,13 @@ export function PaymentPanel({ company, category }: { company: Company; category
     let status: PaymentRecord["status"] = "CONFIRMED";
     let failureReason: string | undefined;
     try {
-      // Sent straight through Crossmint's wallet.send(), not bluto — bluto's
-      // /wallet/send was an unverified guess at an endpoint it may not even
-      // implement; this talks to the wallet directly.
-      const result = await sendUsdcPayment({
-        walletAddress: wallet.address,
-        toAddress: company.receivingAddress,
-        amountUsdc: amount,
-      });
+      // Sent server-side: the backend holds the Crossmint wallet credentials
+      // and does the actual transfer, identifying the sender by email.
+      const result = await sendToken({ email, amount }, token);
       txHash = result.txHash;
     } catch (err) {
       status = "FAILED";
-      failureReason = err instanceof Error ? err.message : "Error desconocido";
+      failureReason = err instanceof ApiError ? err.message : "Error desconocido";
     }
 
     addPayment(email, {
@@ -119,7 +116,7 @@ export function PaymentPanel({ company, category }: { company: Company; category
     refresh();
 
     setIsPending(false);
-    setSuccess({ reference: trimmedReference, amount, status, txHash });
+    setSuccess({ reference: trimmedReference, amount, status, txHash, failureReason });
   }
 
   const logo = <img src={`/logos/${company.logoKey}.png`} alt={company.name} className="w-2/5 rounded-2xl object-cover" />;
@@ -136,6 +133,7 @@ export function PaymentPanel({ company, category }: { company: Company; category
           <SummaryRow label="Monto" value={`$${Number(success.amount).toFixed(2)} USDC`} />
           <SummaryRow label="Estado" value={failed ? "Falló" : "Confirmado"} />
           {success.txHash ? <SummaryRow label="Transacción" value={success.txHash} mono /> : null}
+          {success.failureReason ? <SummaryRow label="Motivo" value={success.failureReason} /> : null}
         </Card>
         <div className="flex w-full flex-col gap-3">
           <Link to={`/store/pay?category=${category}`}>

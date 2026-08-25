@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { sendUsdc } from "../../api/walletApi";
+import { sendToken } from "../../api/walletApi";
 import { ApiError } from "../../api/httpClient";
 import { useUserAuth } from "../../auth/userAuth";
 import { Button } from "../../components/Button";
@@ -7,7 +7,7 @@ import { TextField } from "../../components/TextField";
 import type { SendUsdcResult } from "../../types/wallet";
 
 export function SendUsdcForm({ onSuccess }: { onSuccess: (result: SendUsdcResult) => void }) {
-  const { token } = useUserAuth();
+  const { token, email } = useUserAuth();
   const [toAddress, setToAddress] = useState("");
   const [amount, setAmount] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -17,7 +17,7 @@ export function SendUsdcForm({ onSuccess }: { onSuccess: (result: SendUsdcResult
     e.preventDefault();
     setError(null);
 
-    if (!token) {
+    if (!token || !email) {
       setError("Tu sesión expiró. Vuelve a iniciar sesión.");
       return;
     }
@@ -35,8 +35,13 @@ export function SendUsdcForm({ onSuccess }: { onSuccess: (result: SendUsdcResult
 
     setIsPending(true);
     try {
-      const result = await sendUsdc({ toAddress: trimmedAddress, amount }, token);
-      onSuccess(result);
+      // Sent server-side via /transaction/send-token — see
+      // src/api/walletApi.ts. NOTE: that endpoint takes only {email, amount},
+      // no destination, so `trimmedAddress` above isn't actually sent
+      // anywhere right now; this form still needs a real arbitrary-recipient
+      // endpoint before it can do what its "Dirección de destino" field implies.
+      const result = await sendToken({ email, amount }, token);
+      onSuccess({ txHash: result.txHash, status: result.status ?? "CONFIRMED" });
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "No pudimos enviar el USDC. Intenta de nuevo.");
     } finally {

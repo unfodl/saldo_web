@@ -12,6 +12,10 @@ export const CONFIRMED_ENDPOINTS = {
   userLogin: "/auth/create-token",
   adminLogin: "/auth/admin/login",
   userList: "/user/list",
+  // Sends USDC server-side — added on the backend to replace the client-side
+  // Crossmint wallets-sdk approach (blocked by the SDK's own signer
+  // restrictions in a browser; see git history of src/lib/crossmint/client.ts).
+  sendToken: "/transaction/send-token",
 };
 
 // TODO: UNVERIFIED — bluto doesn't document a create-user endpoint anywhere we
@@ -25,10 +29,9 @@ export const UNVERIFIED_ENDPOINTS = {
   // Guessed to mirror adminLogin's /auth/admin/login path; confirm against
   // the real backend and fix here if the path or response shape differs.
   adminDetails: "/auth/admin/details",
-  // Guessed wallet endpoints — bluto doesn't document a wallet API anywhere
+  // Guessed wallet endpoint — bluto doesn't document a wallet API anywhere
   // we have access to. Confirm against the real backend and fix here.
   walletDetails: "/wallet/details",
-  walletSend: "/wallet/send",
 };
 
 export const ENDPOINTS = { ...CONFIRMED_ENDPOINTS, ...UNVERIFIED_ENDPOINTS };
