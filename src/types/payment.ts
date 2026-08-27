@@ -9,17 +9,3 @@ export type Company = {
   receivingAddress: string;
 };
 
-export type PaymentStatus = "CONFIRMED" | "FAILED";
-
-export type PaymentRecord = {
-  id: string;
-  companyId: string;
-  companyName: string;
-  companyLogoKey: string;
-  reference: string;
-  amount: string;
-  status: PaymentStatus;
-  txHash?: string;
-  failureReason?: string;
-  createdAt: string;
-};

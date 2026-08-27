@@ -16,6 +16,7 @@ export const CONFIRMED_ENDPOINTS = {
   // Crossmint wallets-sdk approach (blocked by the SDK's own signer
   // restrictions in a browser; see git history of src/lib/crossmint/client.ts).
   sendToken: "/transaction/send-token",
+  transactionList: "/transaction/list",
 };
 
 // TODO: UNVERIFIED — bluto doesn't document a create-user endpoint anywhere we
