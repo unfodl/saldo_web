@@ -10,9 +10,23 @@ export type WalletDetails = {
 // the sender by email (not an on-chain address) and has no destination
 // field, so it's specific to the pay-a-provider/recharge flow, not a
 // generic send-to-any-address transfer.
+//
+// TODO: UNVERIFIED field names for companyName/transactionType/reference/
+// phone — the backend team described these by concept ("company name,
+// transaction type (recharge or service), reference or phone which
+// applicable"), not by exact key. Confirm against the real endpoint and fix
+// here if it expects different names.
+export type TransactionType = "recharge" | "service";
+
 export type SendTokenPayload = {
   email: string;
   amount: string;
+  companyName?: string;
+  type?: TransactionType;
+  // Only one of these is sent per request — RECARGAS companies get `phone`,
+  // everything else gets `reference` (see PaymentPanel.tsx).
+  reference?: string;
+  phone?: string;
 };
 
 export type SendUsdcResult = {

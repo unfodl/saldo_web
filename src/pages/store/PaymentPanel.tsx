@@ -94,7 +94,18 @@ export function PaymentPanel({ company, category }: { company: Company; category
     try {
       // Sent server-side: the backend holds the Crossmint wallet credentials
       // and does the actual transfer, identifying the sender by email.
-      const result = await sendToken({ email, amount }, token);
+      // RECARGAS providers recharge a phone number, so the reference the
+      // user typed is sent as `phone` there instead of `reference`.
+      const result = await sendToken(
+        {
+          email,
+          amount,
+          companyName: company.name,
+          type: category === "RECARGAS" ? "recharge" : "service",
+          ...(category === "RECARGAS" ? { phone: trimmedReference } : { reference: trimmedReference }),
+        },
+        token,
+      );
       txHash = result.txHash;
     } catch (err) {
       status = "FAILED";
@@ -247,9 +258,8 @@ function StepIndicator({ step }: { step: Step }) {
           <div key={s.key} className="flex flex-1 items-center last:flex-none">
             <div className="flex items-center gap-2">
               <div
-                className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold transition-colors ${
-                  isDone ? "bg-forest text-cream" : isActive ? "bg-amber text-forest" : "bg-forest/10 text-forest/40"
-                }`}
+                className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold transition-colors ${isDone ? "bg-forest text-cream" : isActive ? "bg-amber text-forest" : "bg-forest/10 text-forest/40"
+                  }`}
               >
                 {isDone ? "✓" : i + 1}
               </div>
