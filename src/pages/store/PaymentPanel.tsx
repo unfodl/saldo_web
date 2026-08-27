@@ -5,20 +5,21 @@ import { ApiError } from "../../api/httpClient";
 import { sendToken } from "../../api/walletApi";
 import { useUserAuth } from "../../auth/userAuth";
 import { useSaldoWallet } from "../../hooks/useSaldoWallet";
-import { addPayment } from "../../lib/paymentHistory";
 import { validateAmount, validatePin, validateReference } from "../../lib/validation";
 import { Button } from "../../components/Button";
 import { Card } from "../../components/Card";
 import { PinInput } from "../../components/PinInput";
 import { TextField } from "../../components/TextField";
-import type { Company, CompanyCategory, PaymentRecord } from "../../types/payment";
+import type { Company, CompanyCategory } from "../../types/payment";
 
 type Step = "details" | "confirm";
+
+type PaymentStatus = "CONFIRMED" | "FAILED";
 
 type SuccessState = {
   reference: string;
   amount: string;
-  status: PaymentRecord["status"];
+  status: PaymentStatus;
   txHash?: string;
   failureReason?: string;
 };
@@ -89,30 +90,29 @@ export function PaymentPanel({ company, category }: { company: Company; category
 
     const trimmedReference = reference.trim();
     let txHash: string | undefined;
-    let status: PaymentRecord["status"] = "CONFIRMED";
+    let status: PaymentStatus = "CONFIRMED";
     let failureReason: string | undefined;
     try {
       // Sent server-side: the backend holds the Crossmint wallet credentials
       // and does the actual transfer, identifying the sender by email.
-      const result = await sendToken({ email, amount }, token);
+      // RECARGAS providers recharge a phone number, so the reference the
+      // user typed is sent as `phone` there instead of `reference`.
+      const result = await sendToken(
+        {
+          email,
+          amount,
+          companyName: company.name,
+          type: category === "RECARGAS" ? "recharge" : "service",
+          ...(category === "RECARGAS" ? { phone: trimmedReference } : { reference: trimmedReference }),
+        },
+        token,
+      );
       txHash = result.txHash;
     } catch (err) {
       status = "FAILED";
       failureReason = err instanceof ApiError ? err.message : "Error desconocido";
     }
 
-    addPayment(email, {
-      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      companyId: company.id,
-      companyName: company.name,
-      companyLogoKey: company.logoKey,
-      reference: trimmedReference,
-      amount,
-      status,
-      txHash,
-      failureReason,
-      createdAt: new Date().toISOString(),
-    });
     refresh();
 
     setIsPending(false);
@@ -247,9 +247,8 @@ function StepIndicator({ step }: { step: Step }) {
           <div key={s.key} className="flex flex-1 items-center last:flex-none">
             <div className="flex items-center gap-2">
               <div
-                className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold transition-colors ${
-                  isDone ? "bg-forest text-cream" : isActive ? "bg-amber text-forest" : "bg-forest/10 text-forest/40"
-                }`}
+                className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold transition-colors ${isDone ? "bg-forest text-cream" : isActive ? "bg-amber text-forest" : "bg-forest/10 text-forest/40"
+                  }`}
               >
                 {isDone ? "✓" : i + 1}
               </div>
