@@ -33,6 +33,9 @@ export const UNVERIFIED_ENDPOINTS = {
   // Guessed wallet endpoint — bluto doesn't document a wallet API anywhere
   // we have access to. Confirm against the real backend and fix here.
   walletDetails: "/wallet/details",
+  // Guessed MXN-to-USD exchange-rate proxy — see src/lib/exchangeRate.ts for
+  // why this needs to go through bluto rather than saldo.mx directly.
+  exchangeRate: "/transaction/exchange-rate",
 };
 
 export const ENDPOINTS = { ...CONFIRMED_ENDPOINTS, ...UNVERIFIED_ENDPOINTS };

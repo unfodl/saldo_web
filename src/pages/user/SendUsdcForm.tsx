@@ -36,11 +36,11 @@ export function SendUsdcForm({ onSuccess }: { onSuccess: (result: SendUsdcResult
     setIsPending(true);
     try {
       // Sent server-side via /transaction/send-token — see
-      // src/api/walletApi.ts. NOTE: that endpoint takes only {email, amount},
+      // src/api/walletApi.ts. NOTE: that endpoint takes only {email, amountUsdc},
       // no destination, so `trimmedAddress` above isn't actually sent
       // anywhere right now; this form still needs a real arbitrary-recipient
       // endpoint before it can do what its "Dirección de destino" field implies.
-      const result = await sendToken({ email, amount }, token);
+      const result = await sendToken({ email, amountUsdc: amount }, token);
       onSuccess({ txHash: result.txHash, status: result.status ?? "CONFIRMED" });
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "No pudimos enviar el USDC. Intenta de nuevo.");
