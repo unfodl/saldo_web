@@ -5,16 +5,23 @@
 export type TransactionMetadata = {
   company?: string;
   reference?: string;
+  phone?: string;
+  amount?: string;
   amountService?: string;
   currency?: string;
   sendEmail?: string;
   dv?: string;
 };
 
-export type TransactionCrossmintInfo = {
+export type TransactionCrossmintResponse = {
   transactionId?: string;
   hash?: string;
   explorerLink?: string;
+};
+
+export type TransactionCrossmintInfo = {
+  request?: { walletAddress?: string; amount?: string };
+  response?: TransactionCrossmintResponse;
   reportedAt?: string;
 };
 
@@ -26,7 +33,9 @@ export type TransactionSaldoResponse = {
 };
 
 export type TransactionSaldoInfo = {
+  request?: { mail?: string; company?: string; phone?: string; amount?: string };
   response?: TransactionSaldoResponse;
+  error?: string;
   calledAt?: string;
 };
 
@@ -37,9 +46,15 @@ export type Transaction = {
   walletAddress: string;
   chain: string;
   amount: string;
+  amountUsdc: string;
+  amountMxn?: string;
   currency: string;
   type: string;
   status: string;
+  company?: {
+    code: string;
+    name: string;
+  };
   metadata?: TransactionMetadata;
   crossmint?: TransactionCrossmintInfo;
   saldo?: TransactionSaldoInfo;

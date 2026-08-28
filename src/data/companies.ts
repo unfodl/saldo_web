@@ -14,12 +14,13 @@ function placeholderAddress(tag: string): string {
 }
 
 export const COMPANIES: Company[] = [
-  { id: "cfe", name: "CFE", logoKey: "cfe", category: "SERVICIOS", group: null, receivingAddress: placeholderAddress("cfe") },
-  { id: "telmex", name: "Telmex", logoKey: "telmex", category: "SERVICIOS", group: null, receivingAddress: placeholderAddress("telmex") },
-  { id: "sky", name: "Sky", logoKey: "sky", category: "SERVICIOS", group: null, receivingAddress: placeholderAddress("sky") },
-  { id: "infonavit", name: "Infonavit", logoKey: "infonavit", category: "SERVICIOS", group: null, receivingAddress: placeholderAddress("infonavit") },
-  { id: "dish", name: "Dish", logoKey: "dish", category: "SERVICIOS", group: "Compañías de Cable", receivingAddress: placeholderAddress("dish") },
-  { id: "izzi", name: "Izzi", logoKey: "izzi", category: "SERVICIOS", group: "Compañías de Cable", receivingAddress: placeholderAddress("izzi") },
-  { id: "megacable", name: "Megacable", logoKey: "megacable", category: "SERVICIOS", group: "Compañías de Cable", receivingAddress: placeholderAddress("megacable") },
-  { id: "att", name: "AT&T", logoKey: "att", category: "RECARGAS", group: null, receivingAddress: placeholderAddress("att") },
+  { id: "telcel", code:"1", name: "Telcel", logoKey: "telcel", category: "RECARGAS", group: null, receivingAddress: placeholderAddress("telcel") },
+  { id: "cfe", code:"2", name: "CFE", logoKey: "cfe", category: "SERVICIOS", group: null, receivingAddress: placeholderAddress("cfe") },
+  { id: "telmex", code:"3", name: "Telmex", logoKey: "telmex", category: "SERVICIOS", group: null, receivingAddress: placeholderAddress("telmex") },
+  { id: "sky", code:"4", name: "Sky", logoKey: "sky", category: "SERVICIOS", group: null, receivingAddress: placeholderAddress("sky") },
+  { id: "infonavit", code:"5", name: "Infonavit", logoKey: "infonavit", category: "SERVICIOS", group: null, receivingAddress: placeholderAddress("infonavit") },
+  { id: "dish", code:"6", name: "Dish", logoKey: "dish", category: "SERVICIOS", group: "Compañías de Cable", receivingAddress: placeholderAddress("dish") },
+  { id: "izzi", code:"7", name: "Izzi", logoKey: "izzi", category: "SERVICIOS", group: "Compañías de Cable", receivingAddress: placeholderAddress("izzi") },
+  { id: "megacable", code:"8", name: "Megacable", logoKey: "megacable", category: "SERVICIOS", group: "Compañías de Cable", receivingAddress: placeholderAddress("megacable") },
+  { id: "att", code:"9", name: "AT&T", logoKey: "att", category: "RECARGAS", group: null, receivingAddress: placeholderAddress("att") },
 ];

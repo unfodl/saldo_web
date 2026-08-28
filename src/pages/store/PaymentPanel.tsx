@@ -5,7 +5,8 @@ import { ApiError } from "../../api/httpClient";
 import { sendToken } from "../../api/walletApi";
 import { useUserAuth } from "../../auth/userAuth";
 import { useSaldoWallet } from "../../hooks/useSaldoWallet";
-import { validateAmount, validatePin, validateReference } from "../../lib/validation";
+import { convertMxnToUsdc } from "../../lib/exchangeRate";
+import { validateAmount, validateMxnAmount, validatePin, validateReference } from "../../lib/validation";
 import { Button } from "../../components/Button";
 import { Card } from "../../components/Card";
 import { PinInput } from "../../components/PinInput";
@@ -18,7 +19,8 @@ type PaymentStatus = "CONFIRMED" | "FAILED";
 
 type SuccessState = {
   reference: string;
-  amount: string;
+  amountMxn: string;
+  amountUsdc: string;
   status: PaymentStatus;
   txHash?: string;
   failureReason?: string;
@@ -31,14 +33,16 @@ export function PaymentPanel({ company, category }: { company: Company; category
 
   const [step, setStep] = useState<Step>("details");
   const [reference, setReference] = useState("");
-  const [amount, setAmount] = useState("");
+  const [amountMxn, setAmountMxn] = useState("");
+  const [amountUsd, setAmountUsd] = useState<number | null>(null);
   const [detailsError, setDetailsError] = useState<string | null>(null);
+  const [isConverting, setIsConverting] = useState(false);
   const [pin, setPin] = useState("");
   const [pinError, setPinError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
   const [success, setSuccess] = useState<SuccessState | null>(null);
 
-  function handleDetailsSubmit(e: FormEvent) {
+  async function handleDetailsSubmit(e: FormEvent) {
     e.preventDefault();
 
     const refCheck = validateReference(reference);
@@ -47,14 +51,37 @@ export function PaymentPanel({ company, category }: { company: Company; category
       return;
     }
 
-    const amountCheck = validateAmount(amount, availableBalance);
-    if (!amountCheck.ok) {
-      setDetailsError(amountCheck.error);
+    const mxnCheck = validateMxnAmount(amountMxn);
+    if (!mxnCheck.ok) {
+      setDetailsError(mxnCheck.error);
+      return;
+    }
+    if (!token) {
+      setDetailsError("Tu sesión expiró. Vuelve a iniciar sesión.");
       return;
     }
 
     setDetailsError(null);
-    setStep("confirm");
+    setIsConverting(true);
+    try {
+      // Same MXN-to-USDC conversion the old Next.js app used: the operator
+      // types the peso amount, we resolve it to USDC via Saldo's exchange
+      // rate before checking it against the wallet's USDC balance.
+      const usd = await convertMxnToUsdc(Number(amountMxn), token);
+
+      const usdCheck = validateAmount(String(usd), availableBalance);
+      if (!usdCheck.ok) {
+        setDetailsError(usdCheck.error);
+        return;
+      }
+
+      setAmountUsd(usd);
+      setStep("confirm");
+    } catch {
+      setDetailsError("No pudimos obtener el tipo de cambio. Intenta de nuevo.");
+    } finally {
+      setIsConverting(false);
+    }
   }
 
   async function handleConfirm(e: FormEvent) {
@@ -74,6 +101,10 @@ export function PaymentPanel({ company, category }: { company: Company; category
       setPinError("Esta cuenta todavía no tiene una billetera configurada.");
       return;
     }
+    if (amountUsd === null) {
+      setPinError("No pudimos calcular el monto en USDC. Vuelve a intentarlo.");
+      return;
+    }
 
     setIsPending(true);
 
@@ -89,6 +120,7 @@ export function PaymentPanel({ company, category }: { company: Company; category
     }
 
     const trimmedReference = reference.trim();
+    const amountUsdc = amountUsd.toFixed(6);
     let txHash: string | undefined;
     let status: PaymentStatus = "CONFIRMED";
     let failureReason: string | undefined;
@@ -100,8 +132,9 @@ export function PaymentPanel({ company, category }: { company: Company; category
       const result = await sendToken(
         {
           email,
-          amount,
-          companyName: company.name,
+          amountMxn,
+          amountUsdc,
+          company: { name: company.name, code: company.code },
           type: category === "RECARGAS" ? "recharge" : "service",
           ...(category === "RECARGAS" ? { phone: trimmedReference } : { reference: trimmedReference }),
         },
@@ -116,7 +149,7 @@ export function PaymentPanel({ company, category }: { company: Company; category
     refresh();
 
     setIsPending(false);
-    setSuccess({ reference: trimmedReference, amount, status, txHash, failureReason });
+    setSuccess({ reference: trimmedReference, amountMxn, amountUsdc, status, txHash, failureReason });
   }
 
   if (success) {
@@ -135,7 +168,8 @@ export function PaymentPanel({ company, category }: { company: Company; category
           <CompanyHeader company={company} caption={failed ? "Pago fallido" : "Pago confirmado"} />
           <div className="divide-y divide-forest/8 px-5">
             <SummaryRow label="Referencia" value={success.reference} />
-            <SummaryRow label="Monto" value={`$${Number(success.amount).toFixed(2)} USDC`} />
+            <SummaryRow label="Monto" value={`$${Number(success.amountMxn).toFixed(2)} MXN`} />
+            <SummaryRow label="Pagado" value={`$${Number(success.amountUsdc).toFixed(2)} USDC`} />
             <SummaryRow label="Estado" value={failed ? "Falló" : "Confirmado"} />
             {success.txHash ? <SummaryRow label="Transacción" value={success.txHash} mono /> : null}
             {success.failureReason ? <SummaryRow label="Motivo" value={success.failureReason} /> : null}
@@ -176,22 +210,25 @@ export function PaymentPanel({ company, category }: { company: Company; category
             required
           />
           <TextField
-            label="Monto (USDC)"
-            name="amount"
+            label="Monto a pagar (MXN)"
+            name="amountMxn"
             placeholder="0.00"
             inputMode="decimal"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
+            value={amountMxn}
+            onChange={(e) => setAmountMxn(e.target.value)}
             required
           />
           {detailsError ? <p className="text-sm text-red-600">{detailsError}</p> : null}
-          <Button type="submit">Continuar</Button>
+          <Button type="submit" disabled={isConverting}>
+            {isConverting ? "Calculando…" : "Continuar"}
+          </Button>
         </form>
       ) : (
         <div className="flex w-full flex-col items-center gap-6">
           <Card className="w-full divide-y divide-forest/8 bg-white px-5 shadow-sm">
             <SummaryRow label="Referencia" value={reference} />
-            <SummaryRow label="Monto" value={`$${Number(amount).toFixed(2)} USDC`} />
+            <SummaryRow label="Monto" value={`$${Number(amountMxn).toFixed(2)} MXN`} />
+            <SummaryRow label="Equivalente" value={`≈ $${(amountUsd ?? 0).toFixed(2)} USDC`} />
           </Card>
 
           <form onSubmit={handleConfirm} className="flex w-full flex-col items-center gap-6">

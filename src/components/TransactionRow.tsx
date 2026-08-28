@@ -55,10 +55,12 @@ function DetailSection({ title, children }: { title: string; children: ReactNode
 export function TransactionRow({ transaction }: { transaction: Transaction }) {
   const [expanded, setExpanded] = useState(false);
   const status = statusMeta(transaction.status);
-  const companyName = transaction.metadata?.company ?? transaction.type;
-  const company = COMPANIES.find((c) => c.name.toLowerCase() === companyName?.toLowerCase());
-  const reference = transaction.metadata?.reference;
+  const company = COMPANIES.find((c) => c.code === transaction.company?.code);
+  const companyName = transaction?.company?.name ?? transaction.type;
+  const phone = transaction.metadata?.phone;
+  const reference = transaction.metadata?.reference ?? phone;
   const saldoResponse = transaction.saldo?.response;
+  const saldoError = transaction.saldo?.error;
 
   return (
     <div className="px-5 py-4">
@@ -81,7 +83,7 @@ export function TransactionRow({ transaction }: { transaction: Transaction }) {
         </div>
         <div className="shrink-0 text-right">
           <p className="tabular-nums font-semibold text-forest">
-            {Number(transaction.amount).toFixed(2)} {transaction.currency}
+            {Number(transaction.amountUsdc).toFixed(2)} {transaction.currency}
           </p>
           <span className={`inline-block rounded-full px-2 py-0.5 text-xs ${status.className}`}>{status.label}</span>
         </div>
@@ -105,6 +107,8 @@ export function TransactionRow({ transaction }: { transaction: Transaction }) {
             <DetailRow label="Cadena" value={transaction.chain} />
             <DetailRow label="Billetera" value={transaction.walletAddress} mono />
             <DetailRow label="Tipo" value={transaction.type} />
+            <DetailRow label={phone ? "Teléfono" : "Referencia"} value={reference} />
+            <DetailRow label="Monto MXN" value={transaction.amountMxn ? `$${Number(transaction.amountMxn).toFixed(2)} MXN` : undefined} />
             {transaction.metadata?.amountService ? (
               <DetailRow
                 label="Monto del servicio"
@@ -114,28 +118,34 @@ export function TransactionRow({ transaction }: { transaction: Transaction }) {
             <DetailRow label="Actualizado" value={formatDate(transaction.updatedAt)} />
           </DetailSection>
 
-          {saldoResponse ? (
+          {saldoResponse || saldoError ? (
             <DetailSection title="Respuesta de Saldo">
-              <DetailRow label="Resultado" value={saldoResponse.result} />
-              <DetailRow
-                label="Pagado"
-                value={saldoResponse.paid ? `${saldoResponse.paid} ${saldoResponse.currency ?? ""}`.trim() : undefined}
-              />
-              <DetailRow label="Comisión" value={saldoResponse.amount} />
+              {saldoError ? (
+                <DetailRow label="Error" value={saldoError} />
+              ) : (
+                <>
+                  <DetailRow label="Resultado" value={saldoResponse?.result} />
+                  <DetailRow
+                    label="Pagado"
+                    value={saldoResponse?.paid ? `${saldoResponse.paid} ${saldoResponse.currency ?? ""}`.trim() : undefined}
+                  />
+                  <DetailRow label="Comisión" value={saldoResponse?.amount} />
+                </>
+              )}
               <DetailRow label="Consultado" value={formatDate(transaction.saldo?.calledAt ?? "")} />
             </DetailSection>
           ) : null}
 
           {transaction.crossmint ? (
             <DetailSection title="Respuesta de Crossmint">
-              <DetailRow label="ID de transacción" value={transaction.crossmint.transactionId} mono />
-              <DetailRow label="Hash" value={transaction.crossmint.hash} mono />
+              <DetailRow label="ID de transacción" value={transaction.crossmint.response?.transactionId} mono />
+              <DetailRow label="Hash" value={transaction.crossmint.response?.hash} mono />
               <DetailRow label="Reportado" value={formatDate(transaction.crossmint.reportedAt ?? "")} />
-              {transaction.crossmint.explorerLink ? (
+              {transaction.crossmint.response?.explorerLink ? (
                 <div className="flex items-center justify-between gap-4 py-2">
                   <span className="text-xs text-ink-4">Explorador</span>
                   <a
-                    href={transaction.crossmint.explorerLink}
+                    href={transaction.crossmint.response.explorerLink}
                     target="_blank"
                     rel="noreferrer"
                     className="rounded-full bg-forest/10 px-3 py-1 text-xs font-medium text-forest-light hover:bg-forest/20"

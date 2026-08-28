@@ -44,7 +44,7 @@ token to be set by a same-origin server — this app talks to bluto directly
 
 ## ⚠️ Unverified backend assumptions
 
-Two things here are **guesses**, not confirmed against bluto's real behavior
+Three things here are **guesses**, not confirmed against bluto's real behavior
 — fix them in one place if they don't match:
 
 1. **`src/api/config.ts` → `UNVERIFIED_ENDPOINTS.createUser`** — bluto has no
@@ -57,6 +57,15 @@ Two things here are **guesses**, not confirmed against bluto's real behavior
    bluto *also* returns `{ token: "..." }` in the JSON body. If it only sets
    that cookie, admin login will otherwise succeed but throw "no access
    token" — confirm the real shape and adjust.
+3. **`src/api/config.ts` → `UNVERIFIED_ENDPOINTS.exchangeRate`**, used by
+   `src/lib/exchangeRate.ts` — the pay-a-provider flow needs a MXN-to-USD
+   rate. Calling saldo.mx's own exchange endpoint
+   (`/Saldos/api/ripplev3/exchangeUSD/{mxn}`) directly from the browser is
+   blocked by CORS (it sends no `Access-Control-Allow-Origin`), so this
+   guesses a bluto passthrough at `GET /transaction/exchange-rate?mxn=`
+   returning `{ usd: number }`. bluto needs to actually implement this
+   (proxying saldo.mx's endpoint server-side) for the payment flow to work;
+   confirm the real path/shape and adjust here if it differs.
 
 Also: calling bluto directly from the browser (rather than proxying through
 a same-origin server, as `saldo_web` does) requires bluto to send CORS
