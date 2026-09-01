@@ -18,6 +18,35 @@ function placeholderAddress(tag: string): string {
 // telmex) — the rest reuse the company id as logoKey and will 404 until
 // real logo assets are added.
 export const COMPANIES: Company[] = [
+  // AirTime carriers and fixed-denomination top-ups. Codes reuse the same
+  // numbering as other RECARGAS/SERVICIOS entries below (e.g. "1", "8") —
+  // per the business, these are a separate enum namespace and the
+  // duplication across groups is expected.
+  { id: "telcel", code: "1", name: "Telcel", logoKey: "telcel", category: "RECARGAS", group: "airTime", receivingAddress: placeholderAddress("telcel") },
+  { id: "movistar", code: "2", name: "Movistar", logoKey: "movistar", category: "RECARGAS", group: "airTime", receivingAddress: placeholderAddress("movistar") },
+  { id: "iusacell", code: "3", name: "Iusacell", logoKey: "iusacell", category: "RECARGAS", group: "airTime", receivingAddress: placeholderAddress("iusacell") },
+  { id: "unefon", code: "4", name: "Unefon", logoKey: "unefon", category: "RECARGAS", group: "airTime", receivingAddress: placeholderAddress("unefon") },
+  { id: "nextel", code: "5", name: "Nextel", logoKey: "nextel", category: "RECARGAS", group: "airTime", receivingAddress: placeholderAddress("nextel") },
+  { id: "virgin", code: "6", name: "Virgin Mobile", logoKey: "virgin", category: "RECARGAS", group: "airTime", receivingAddress: placeholderAddress("virgin") },
+  { id: "internet20", code: "7", name: "Internet $20", logoKey: "internet20", category: "RECARGAS", group: "airTime", receivingAddress: placeholderAddress("internet20") },
+  { id: "internet30", code: "8", name: "Internet $30", logoKey: "internet30", category: "RECARGAS", group: "airTime", receivingAddress: placeholderAddress("internet30") },
+  { id: "internet50", code: "9", name: "Internet $50", logoKey: "internet50", category: "RECARGAS", group: "airTime", receivingAddress: placeholderAddress("internet50") },
+  { id: "internet200", code: "10", name: "Internet $200", logoKey: "internet200", category: "RECARGAS", group: "airTime", receivingAddress: placeholderAddress("internet200") },
+  { id: "internet500", code: "11", name: "Internet $500", logoKey: "internet500", category: "RECARGAS", group: "airTime", receivingAddress: placeholderAddress("internet500") },
+  { id: "internet100", code: "19", name: "Internet $100", logoKey: "internet100", category: "RECARGAS", group: "airTime", receivingAddress: placeholderAddress("internet100") },
+  { id: "internet150", code: "20", name: "Internet $150", logoKey: "internet150", category: "RECARGAS", group: "airTime", receivingAddress: placeholderAddress("internet150") },
+  { id: "internet300", code: "21", name: "Internet $300", logoKey: "internet300", category: "RECARGAS", group: "airTime", receivingAddress: placeholderAddress("internet300") },
+  { id: "internettelcel", code: "25", name: "Internet Telcel", logoKey: "internettelcel", category: "RECARGAS", group: "airTime", receivingAddress: placeholderAddress("internettelcel") },
+  { id: "flashmobile", code: "25", name: "Flash Mobile", logoKey: "flashmobile", category: "RECARGAS", group: "airTime", receivingAddress: placeholderAddress("flashmobile") },
+  { id: "oui", code: "26", name: "OUI", logoKey: "oui", category: "RECARGAS", group: "airTime", receivingAddress: placeholderAddress("oui") },
+  { id: "freedom", code: "27", name: "Freedom", logoKey: "freedom", category: "RECARGAS", group: "airTime", receivingAddress: placeholderAddress("freedom") },
+  { id: "compartcarga", code: "28", name: "Compartcarga", logoKey: "compartcarga", category: "RECARGAS", group: "airTime", receivingAddress: placeholderAddress("compartcarga") },
+  { id: "mimovil", code: "29", name: "Mi Movil", logoKey: "mimovil", category: "RECARGAS", group: "airTime", receivingAddress: placeholderAddress("mimovil") },
+  { id: "abib", code: "30", name: "Abib", logoKey: "abib", category: "RECARGAS", group: "airTime", receivingAddress: placeholderAddress("abib") },
+  { id: "newww", code: "31", name: "Newww", logoKey: "newww", category: "RECARGAS", group: "airTime", receivingAddress: placeholderAddress("newww") },
+  { id: "bait", code: "32", name: "Bait", logoKey: "bait", category: "RECARGAS", group: "airTime", receivingAddress: placeholderAddress("bait") },
+  { id: "yobi", code: "33", name: "Yobi", logoKey: "yobi", category: "RECARGAS", group: "airTime", receivingAddress: placeholderAddress("yobi") },
+
   // Codes confirmed against bluto's company enum. Category split (RECARGAS
   // vs SERVICIOS) as specified by the business, not inferred from the
   // company names.

@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { fetchCurrentUser } from "../../api/userApi";
-import { fetchWalletDetails } from "../../api/walletApi";
-import { fetchUsdcBalance } from "../../api/crossmintApi";
+import { fetchWalletBalance, fetchWalletDetails } from "../../api/walletApi";
 import { ApiError } from "../../api/httpClient";
 import { useUserAuth } from "../../auth/userAuth";
 import { Button } from "../../components/Button";
@@ -69,20 +68,19 @@ export function UserDashboardPage() {
     }
   }, [token, email]);
 
-  // Fetched straight from Crossmint (not bluto) once the wallet's address and
-  // chain are known — see src/api/crossmintApi.ts.
-  const loadBalance = useCallback(async (address: string, chain: string) => {
+  const loadBalance = useCallback(async () => {
+    if (!token || !email) return;
     setIsBalanceLoading(true);
     setBalanceError(null);
     try {
-      const usdcBalance = await fetchUsdcBalance(address, chain);
+      const usdcBalance = await fetchWalletBalance(email, token);
       setBalance(usdcBalance);
     } catch (err) {
       setBalanceError(err instanceof ApiError ? err.message : "No pudimos obtener tu saldo.");
     } finally {
       setIsBalanceLoading(false);
     }
-  }, []);
+  }, [token, email]);
 
   // Re-fetched on every mount of this page — i.e. right after login (which
   // navigates here) and again on any full page reload/refresh.
@@ -91,14 +89,8 @@ export function UserDashboardPage() {
     hasLoadedRef.current = true;
     loadProfile();
     loadWallet();
-  }, [loadProfile, loadWallet]);
-
-  // The balance depends on the wallet's address/chain, so it fetches once
-  // those come back from loadWallet above rather than in parallel with it.
-  useEffect(() => {
-    if (!wallet) return;
-    loadBalance(wallet.address, wallet.chain);
-  }, [wallet, loadBalance]);
+    loadBalance();
+  }, [loadProfile, loadWallet, loadBalance]);
 
   function handleLogout() {
     logout();

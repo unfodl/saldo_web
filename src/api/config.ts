@@ -17,6 +17,10 @@ export const CONFIRMED_ENDPOINTS = {
   // restrictions in a browser; see git history of src/lib/crossmint/client.ts).
   sendToken: "/transaction/send-token",
   transactionList: "/transaction/list",
+  // Returns the wallet's USDC balance as a plain numeric string in `data`
+  // (e.g. `{ data: "25.4" }`) — replaces the earlier client-side Crossmint
+  // balances call now that bluto exposes this directly.
+  walletBalance: "/wallet/balance",
 };
 
 // TODO: UNVERIFIED — bluto doesn't document a create-user endpoint anywhere we
