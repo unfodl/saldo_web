@@ -14,30 +14,32 @@ export function CompanyMosaic({
     return <p className="text-sm text-ink-4">Próximamente.</p>;
   }
 
-  const ungrouped = companies.filter((c) => !c.group);
-  const groups = new Map<string, Company[]>();
+  // Keyed by group name, or null for ungrouped. A Map preserves insertion
+  // order, so sections render in the order their group first appears in
+  // `companies` — e.g. an "airTime" group at the front of the source array
+  // renders above ungrouped entries, not after them.
+  const sections = new Map<string | null, Company[]>();
   for (const company of companies) {
-    if (!company.group) continue;
-    const list = groups.get(company.group) ?? [];
+    const list = sections.get(company.group) ?? [];
     list.push(company);
-    groups.set(company.group, list);
+    sections.set(company.group, list);
   }
 
   return (
     <div className="flex flex-col gap-10">
-      {ungrouped.length > 0 ? (
-        <CompanyGrid companies={ungrouped} category={category} activeCompanyId={activeCompanyId} />
-      ) : null}
-
-      {Array.from(groups.entries()).map(([groupName, groupCompanies]) => (
-        <div key={groupName} className="flex flex-col gap-4">
-          <div className="flex items-center gap-3">
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-forest/50">{groupName}</h2>
-            <div className="h-px flex-1 bg-forest/8" />
+      {Array.from(sections.entries()).map(([groupName, groupCompanies]) =>
+        groupName ? (
+          <div key={groupName} className="flex flex-col gap-4">
+            <div className="flex items-center gap-3">
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-forest/50">{groupName}</h2>
+              <div className="h-px flex-1 bg-forest/8" />
+            </div>
+            <CompanyGrid companies={groupCompanies} category={category} activeCompanyId={activeCompanyId} />
           </div>
-          <CompanyGrid companies={groupCompanies} category={category} activeCompanyId={activeCompanyId} />
-        </div>
-      ))}
+        ) : (
+          <CompanyGrid key="ungrouped" companies={groupCompanies} category={category} activeCompanyId={activeCompanyId} />
+        ),
+      )}
     </div>
   );
 }

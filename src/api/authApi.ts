@@ -17,12 +17,27 @@ function extractErrorMessage(rawBody: string): string {
   return rawBody;
 }
 
+export type LoginResult = {
+  accessToken: string;
+  // null when bluto doesn't send one — e.g. the re-verification login inside
+  // PaymentPanel's PIN confirm step still works, it just can't be silently
+  // refreshed later (that call's result is discarded anyway).
+  refreshToken: string | null;
+  // Access token lifetime in seconds, from X-Token-Expires-In. Not currently
+  // used (the app only refreshes reactively on a 401), but available for a
+  // future proactive-refresh optimization — see REFRESH_TOKEN.md.
+  expiresIn: number | null;
+};
+
 /**
  * User login: exchanges an email + PIN for a signed JWT. Confirmed against
  * the existing saldo_web app — on success the body is the raw JWT string,
- * not wrapped in JSON.
+ * not wrapped in JSON. The refresh token and the access token's lifetime
+ * travel on response headers instead (X-Refresh-Token / X-Token-Expires-In):
+ * create-token's body has to stay a bare JWT string for Crossmint's BYOA
+ * integration, which reads it as plain text — see REFRESH_TOKEN.md.
  */
-export async function loginUser(emailAddress: string, pin: string): Promise<string> {
+export async function loginUser(emailAddress: string, pin: string): Promise<LoginResult> {
   const response = await fetch(`${BLUTO_API_URL}${ENDPOINTS.userLogin}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -38,7 +53,15 @@ export async function loginUser(emailAddress: string, pin: string): Promise<stri
     throw new ApiError("El servidor no devolvió un token.", response.status);
   }
 
-  return body;
+  const refreshToken = response.headers.get("X-Refresh-Token");
+  const expiresInHeader = response.headers.get("X-Token-Expires-In");
+  const expiresIn = expiresInHeader !== null ? Number(expiresInHeader) : null;
+
+  return {
+    accessToken: body,
+    refreshToken,
+    expiresIn: expiresIn !== null && Number.isFinite(expiresIn) ? expiresIn : null,
+  };
 }
 
 /**

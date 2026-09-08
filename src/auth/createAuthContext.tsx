@@ -1,11 +1,13 @@
 import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
-import { AUTH_EMAIL_STORAGE_KEYS, AUTH_STORAGE_KEYS, type AuthKind } from "./session";
+import { AUTH_EMAIL_STORAGE_KEYS, AUTH_REFRESH_STORAGE_KEYS, AUTH_STORAGE_KEYS, type AuthKind } from "./session";
 
 type AuthContextValue = {
   token: string | null;
   email: string | null;
   isAuthenticated: boolean;
-  login: (token: string, email: string) => void;
+  // refreshToken is optional/omittable — only the user auth flow has one
+  // (admin login doesn't). See REFRESH_TOKEN.md.
+  login: (token: string, email: string, refreshToken?: string | null) => void;
   logout: () => void;
 };
 
@@ -17,6 +19,7 @@ type AuthContextValue = {
 export function createAuthContext(kind: AuthKind) {
   const storageKey = AUTH_STORAGE_KEYS[kind];
   const emailStorageKey = AUTH_EMAIL_STORAGE_KEYS[kind];
+  const refreshStorageKey = AUTH_REFRESH_STORAGE_KEYS[kind];
   const Context = createContext<AuthContextValue | null>(null);
 
   function AuthProvider({ children }: { children: ReactNode }) {
@@ -28,15 +31,21 @@ export function createAuthContext(kind: AuthKind) {
         token,
         email,
         isAuthenticated: token !== null,
-        login: (newToken: string, newEmail: string) => {
+        login: (newToken: string, newEmail: string, newRefreshToken?: string | null) => {
           sessionStorage.setItem(storageKey, newToken);
           sessionStorage.setItem(emailStorageKey, newEmail);
+          if (newRefreshToken) {
+            sessionStorage.setItem(refreshStorageKey, newRefreshToken);
+          } else {
+            sessionStorage.removeItem(refreshStorageKey);
+          }
           setToken(newToken);
           setEmail(newEmail);
         },
         logout: () => {
           sessionStorage.removeItem(storageKey);
           sessionStorage.removeItem(emailStorageKey);
+          sessionStorage.removeItem(refreshStorageKey);
           setToken(null);
           setEmail(null);
         },
