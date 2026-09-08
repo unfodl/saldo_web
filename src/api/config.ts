@@ -10,6 +10,9 @@ export const BLUTO_API_URL = (import.meta.env.VITE_BLUTO_API_URL ?? "http://loca
 // Endpoints confirmed against the existing saldo_web app / its bluto server logs.
 export const CONFIRMED_ENDPOINTS = {
   userLogin: "/auth/create-token",
+  // Exchanges a refresh token (sent as the X-Refresh-Token request header,
+  // not a body field) for a new access token — see REFRESH_TOKEN.md.
+  refreshToken: "/auth/refresh-token",
   adminLogin: "/auth/admin/login",
   userList: "/user/list",
   // Sends USDC server-side — added on the backend to replace the client-side
